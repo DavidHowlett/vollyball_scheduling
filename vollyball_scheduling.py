@@ -4,7 +4,13 @@ I need to assign which team will play which when and which team will referee. Th
 Andrew Tatarek built in Microsoft Excel. The output of this file is a grid where each column is a set of games and
 rows repeat: "team1, team2, referee" for each match.
 
-The code in this file was written jointly by Micheal Howlett and David Howlett.
+Tries to minimize score =
+    Number of games where the referee is from a different group * 0.1
+    + (max(games played per team) - min(games played per team)) * 5
+    + sum(max(games played per team) - min(games played per team) for each group) * 2
+    + sum(max(games played or refereed per team) - min(games played or refereed per team) for each group)
+
+The code in this file was written jointly by Michael Howlett, David Howlett and Robert Howlett.
 To enable easy deployment we put all the logic in a single file so that it can be pasted into
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 for easy deployment.
@@ -12,6 +18,7 @@ for easy deployment.
 
 import copy
 import random
+from typing import List
 
 # groups = [
 #     ["teamA1", "teamA2", "teamA3", "teamA4", "teamA5"],
@@ -24,10 +31,12 @@ ORIGINAL_GROUPS = [
     ["Team3-01", "Team3-02", "Team3-03", "Team3-04", "Team3-05"],
     ["Team4-01", "Team4-02", "Team4-03", "Team4-04", "Team4-05", "Team4-06"],
 ]
+ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
+assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 NUM_OF_SIMULATION: int = 500  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 11  # number of rounds of games
 NUM_OF_COURTS = 6
-COURTS_TO_USE = min(NUM_OF_COURTS, len({team for group in ORIGINAL_GROUPS for team in group}) // 3)
+COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // 3)
 # debugging is easier if the randomness is not really random.
 # random.seed(10)
 
@@ -36,25 +45,34 @@ class EmptyCourtException(Exception):
     """thrown when the court is unexpectedly empty"""
 
 
+class TeamStats:
+    def __init__(self, name: str, group: List[str]):
+        self.id = name
+        playable = group.copy()
+        playable.remove(name)
+        random.shuffle(playable)
+        self.eligible_opponents = playable
+        self.games_played = 0
+        self.games_refereed = 0
+        self._backup_opponents = playable.copy()
+
+    def play(self, other: str):
+        if other not in self.eligible_opponents:
+            self.refresh_eligible()
+        self.eligible_opponents.remove(other)
+        self.games_played += 1
+
+    def refresh_eligible(self):
+        self.eligible_opponents.extend(self._backup_opponents)
+
+
 def reformat_teams(given_groups):
     """
-    replace team with [
-        team_name,
-        [teams they can play against],
-        [teams they already played against],
-        total_games_played,
-        [backup of teams to play against],
-        games refereed
-    ]
+    replace team with TeamStats object
     """
     new_groups = []
     for group in given_groups:
-        new_group = []
-        for team in group:
-            playable = group.copy()
-            playable.remove(team)
-            random.shuffle(playable)
-            new_group.append([team, playable, [], 0, playable.copy(), 0])
+        new_group = [TeamStats(name=team, group=group) for team in group]
         new_groups.append(new_group)
     return new_groups
 
@@ -79,7 +97,7 @@ def run_sims(groups):
     best_match_up_score = 999999  # This will be overridden later
     average_match_up_score = 0
     for _ in range(NUM_OF_SIMULATION):  # run the setup "NUM_OF_SIMULATION" times and picks best
-        # Micheal found another bug which crashes the code once every few hundred games.
+        # Michael found another bug which crashes the code once every few hundred games.
         # where if for all teams the [teams they can play against] are already playing someone else, no game gets
         # added causing an empty court and a crash. Due to rarity, we just catch the error and continue.
         try:
@@ -102,63 +120,55 @@ def run_sim(groups):
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups)
-    match_up_score = 999999
+    match_up_score = 0
     for _ in range(ROUNDS):
-        court_to_fill, courts, occupied = one_court_per_group(groups)
-        fill_in_missing_players(court_to_fill, courts, groups, occupied)
-        match_up_score = add_referees(courts, groups, occupied)
+        courts, occupied = one_court_per_group(groups)
+        fill_in_missing_players(courts, groups, occupied)
+        match_up_score += add_referees(courts, groups, occupied)
         to_output = []
         for court in courts:
-            to_output.append(court[0])
-            to_output.append(court[1])
-            to_output.append(court[2])
+            to_output.extend(court)
         output_matrix.append(to_output)
     return match_up_score, output_matrix, groups
 
 
-def one_court_per_group(groups):
+def one_court_per_group(groups: List[List[TeamStats]]):
     """
     This fills in 1 court per group to help balance the number of courts allocated to each group
     """
-    courts = [[]] * COURTS_TO_USE
-    court_to_fill = -1  # court number being filled
+    courts: List[List] = [[]] * COURTS_TO_USE
     occupied = []  # teams which are busy.
-    for group in groups:
-        court_to_fill += 1
+    for court_id, group in enumerate(groups):
         i, j = 9999, 0
         for k, team in enumerate(group):
-            if team[3] < i:
-                i = team[3]
+            if team.games_played < i:
+                i = team.games_played
                 j = k
-        if not group[j][1]:
-            group[j][1] = group[j][4].copy()
-        courts[court_to_fill] = [group[j][0], group[j][1][0], court_to_fill]
+        if not group[j].eligible_opponents:
+            group[j].refresh_eligible()
+        courts[court_id] = [group[j].id, group[j].eligible_opponents[0], court_id]
         # update team information so that the teams don't repeat.
-        occupied.append(group[j][0])
-        occupied.append(group[j][1][0])
+        occupied.append(group[j].id)
+        occupied.append(group[j].eligible_opponents[0])
         # update team 2 info
         for team in group:
-            if team[0] == group[j][1][0]:
-                if group[j][0] not in team[1]:
-                    team[1] = team[1] + team[4].copy()
-                team[1].remove(group[j][0])
-                team[2].append(group[j][0])
-                team[3] += 1
+            if team.id == group[j].eligible_opponents[0]:
+                team.play(group[j].id)
         # update team 1 info
-        group[j][3] = group[j][3] + 1
-        group[j][2].append(group[j][1][0])
-        group[j][1].pop(0)
-    return court_to_fill, courts, occupied
+        group[j].play(group[j].eligible_opponents[0])
+    return courts, occupied
 
 
-def fill_in_missing_players(court_to_fill, courts, groups, occupied):
+def fill_in_missing_players(courts, groups, occupied):
     """
     fills in players for the remaining courts with some randomness
     """
-    while court_to_fill < len(courts) - 1:
-        court_to_fill += 1
+    for court_id, court in enumerate(courts):
+        if court:
+            # Court already filled
+            continue
         # find team with the least games
-        least = min(team[3] for group in groups for team in group)
+        least = min(team.games_played for group in groups for team in group)
         escape = False
         for i in range(200):  # pick a group at random upto 100 times to find an available team.
             if escape:  # need to break out of 3 while loops, so this is how I did it.
@@ -171,32 +181,28 @@ def fill_in_missing_players(court_to_fill, courts, groups, occupied):
             for team in group:
                 if escape:
                     break
-                if team[0] in occupied:  # the team is already playing
+                if team.id in occupied:  # the team is already playing
                     continue
-                if team[3] == least:  # if no team has played less than this one
-                    if not team[1]:
-                        team[1] = team[4].copy()
+                if team.games_played == least:  # if no team has played less than this one
+                    if not team.eligible_opponents:
+                        team.refresh_eligible()
                     for team2 in group:
-                        if team2[0] in team[1]:
-                            if team2[0] not in occupied:
-                                # a game shall be played between team2 and team 1
-                                courts[court_to_fill] = [
-                                    team[0],
-                                    team2[0],
-                                    group_no,
-                                ]
-                                if team[0] not in team2[1]:
-                                    team2[1] = team2[4].copy()
-                                occupied.append(team2[0])
-                                occupied.append(team[0])
-                                team[3] += 1
-                                team[2].append(team2[0])
-                                team[1].remove(team2[0])
-                                team2[3] += 1
-                                team2[2].append(team[0])
-                                team2[1].remove(team[0])
-                                escape = True
-                                break
+                        if team2.id not in team.eligible_opponents:
+                            continue
+                        if team2.id in occupied:
+                            continue
+                        # a game shall be played between team and team2
+                        courts[court_id] = [
+                            team.id,
+                            team2.id,
+                            group_no,
+                        ]
+                        occupied.append(team2.id)
+                        occupied.append(team.id)
+                        team.play(team2.id)
+                        team2.play(team.id)
+                        escape = True
+                        break
 
 
 def add_referees(courts, groups, occupied):
@@ -208,38 +214,32 @@ def add_referees(courts, groups, occupied):
         if not court:
             raise EmptyCourtException
         group = groups[court[2]]
-        found = False
         min_refs = 9999  # minimum number of games refereed by a team in the group
-        best_team = 9999  # team with the least referees
-        i = 0
+        best_team = None  # team with the least referees
         for team in group:  # try to find a ref from the same group
-            if team[0] not in occupied:
-                if team[5] <= min_refs:
-                    min_refs = team[5]
-                    best_team = i
-                    found = True
-            i += 1
-        if found:
-            occupied.append(group[best_team][0])
-            court[2] = group[best_team][0]
-            group[best_team][5] += 1
+            if team.id not in occupied:
+                if team.games_refereed < min_refs:
+                    min_refs = team.games_refereed
+                    best_team = team
+        if best_team is not None:
+            occupied.append(best_team.id)
+            court[2] = best_team.id
+            best_team.games_refereed += 1
         else:  # find one from a different group
             match_up_score += 0.1
-            for _ in range(100):
-                group = groups[random.randint(0, len(groups) - 1)]
-                i = 0
-                for team in group:  # try to find a ref from the same group
-                    if team[0] not in occupied:
-                        if team[5] <= min_refs:
-                            min_refs = team[5]
-                            best_team = i
-                            found = True
-                    i += 1
-                if found:
-                    occupied.append(group[best_team][0])
-                    court[2] = group[best_team][0]
-                    group[best_team][5] += 1
-                    break
+            for group in random.sample(groups, len(groups)):
+                for team in group:
+                    if team.id not in occupied:
+                        if team.games_refereed < min_refs:
+                            min_refs = team.games_refereed
+                            best_team = team
+            if best_team is not None:
+                occupied.append(best_team.id)
+                court[2] = best_team.id
+                best_team.games_refereed += 1
+            else:
+                # todo: handle case where no referee found
+                raise NotImplementedError
     return match_up_score
 
 
@@ -248,27 +248,13 @@ def get_score(groups, match_up_score):
     given a partially calculated score, and the datastructure describing the solution,
     calculate the final score
     """
-    min_games = 9999
-    max_games = 0
+    min_games = min(team.games_played for group in groups for team in group)
+    max_games = max(team.games_played for group in groups for team in group)
     for group in groups:
-        min_g = 9999  # min games within the group
-        max_g = 0
-        min_used = 9999  # minimum number of times a group is either referee or playing
-        max_used = 0
-        for team in group:
-            # I would do "min_games = min(min_games,team[3])", but couldn't get it to work
-            if min_games > team[3]:
-                min_games = team[3]
-            if max_games < team[3]:
-                max_games = team[3]
-            if min_g > team[3]:
-                min_g = team[3]
-            if max_g < team[3]:
-                max_g = team[3]
-            if min_used > team[3] + team[5]:
-                min_used = team[3] + team[5]
-            if max_used < team[3] + team[5]:
-                max_used = team[3] + team[5]
+        min_g = min(team.games_played for team in group)
+        max_g = max(team.games_played for team in group)
+        min_used = min(team.games_played + team.games_refereed for team in group)
+        max_used = max(team.games_played + team.games_refereed for team in group)
         match_up_score += (max_g - min_g) * 2 + (max_used - min_used)
     match_up_score += (max_games - min_games) * 5
     # print(match_up_score)
