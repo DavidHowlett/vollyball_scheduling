@@ -55,12 +55,14 @@ class TeamStats:
         self.games_played = 0
         self.games_refereed = 0
         self._backup_opponents = playable.copy()
+        self.history = ''  # g = Game, r = Referee, f = Free. example: 'ggrgfg'
 
     def play(self, other: str):
         if other not in self.eligible_opponents:
             self.refresh_eligible()
         self.eligible_opponents.remove(other)
         self.games_played += 1
+        self.history += 'g'
 
     def refresh_eligible(self):
         self.eligible_opponents.extend(self._backup_opponents)
@@ -121,10 +123,14 @@ def run_sim(groups):
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups)
     match_up_score = 0
-    for _ in range(ROUNDS):
+    for x in range(ROUNDS):
         courts, occupied = one_court_per_group(groups)
         fill_in_missing_players(courts, groups, occupied)
         match_up_score += add_referees(courts, groups, occupied)
+        for group in groups:
+            for team in group:
+                if len(team.history) <= x:
+                    team.history += 'f'
         to_output = []
         for court in courts:
             to_output.extend(court)
@@ -225,6 +231,7 @@ def add_referees(courts, groups, occupied):
             occupied.append(best_team.id)
             court[2] = best_team.id
             best_team.games_refereed += 1
+            best_team.history += 'r'
         else:  # find one from a different group
             match_up_score += 0.1
             for group in random.sample(groups, len(groups)):
@@ -237,6 +244,7 @@ def add_referees(courts, groups, occupied):
                 occupied.append(best_team.id)
                 court[2] = best_team.id
                 best_team.games_refereed += 1
+                best_team.history += 'r'
             else:
                 # todo: handle case where no referee found
                 raise NotImplementedError
@@ -256,9 +264,31 @@ def get_score(groups, match_up_score):
         min_used = min(team.games_played + team.games_refereed for team in group)
         max_used = max(team.games_played + team.games_refereed for team in group)
         match_up_score += (max_g - min_g) * 2 + (max_used - min_used)
+        for team in group:
+            match_up_score += score_history(team.history)
     match_up_score += (max_games - min_games) * 5
-    # print(match_up_score)
     return match_up_score
+
+
+def score_history(history):
+    """
+    looks at the history of a team and says how badly it does in terms of doing things back to back
+    Used to minimise people playing lots of games back to back without a break and preventing long breaks for bordem
+    :param history: For a team what order were the games and referees. example: 'rgfgggrfrgg'
+    :return: score of how bad it is
+    """
+    weights = {'g': 3, 'r': 0.5, 'f': 2}
+    last = ''
+    total_score = 0
+    repetitions = 0
+    for x in history:
+        if x == last:
+            repetitions += 1
+            total_score += repetitions * weights[x]
+        else:
+            repetitions = 0
+        last = x
+    return total_score*0.05
 
 
 def main():
