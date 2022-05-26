@@ -28,15 +28,30 @@ from typing import List
 ORIGINAL_GROUPS = [
     ["Team1-01", "Team1-02", "Team1-03", "Team1-04", "Team1-05"],
     ["Team2-01", "Team2-02", "Team2-03", "Team2-04", "Team2-05"],
-    ["Team3-01", "Team3-02", "Team3-03", "Team3-04", "Team3-05"],
+    ["Team3-01", "Team3-02", "Team3-03", "Team3-04"],
     ["Team4-01", "Team4-02", "Team4-03", "Team4-04", "Team4-05", "Team4-06"],
 ]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
-assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 NUM_OF_SIMULATION: int = 500  # number of times it tries to produce a setup, higher improves matching but slows program
-ROUNDS = 11  # number of rounds of games
+ROUNDS = 12  # number of rounds of games, redundant in olympic_mode
 NUM_OF_COURTS = 6
 COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // 3)
+# olympic_mode forces everyone in a group to play everyone else in the group the same amount. By group_repeats
+# This normally results in teams playing very different numbers of games and unused courts.
+# You also need to pick the group_repeats to give similar numbers to what you want, so generally set to False
+olympic_mode = False
+# olympic_mode = True
+group_repeats = [1, 2, 2, 1]  # For each group, how many times must each team pairing happen. Only for olympic mode
+
+assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
+if olympic_mode:
+    assert len(ORIGINAL_GROUPS) == len(group_repeats), "Number of groups doesn't match how many group repeats"
+    needed_matches = 0
+    for x in range(len(group_repeats)):
+        needed_matches += group_repeats[x]*len(ORIGINAL_GROUPS[x])*(len(ORIGINAL_GROUPS[x])-1)/2
+    ROUNDS = int(needed_matches) + 2
+    if min(group_repeats) < 1:
+        print("One of the groups won't play until you adjust quantities in 'group_repeats'")
 # debugging is easier if the randomness is not really random.
 # random.seed(10)
 
@@ -46,13 +61,17 @@ class EmptyCourtException(Exception):
 
 
 class TeamStats:
-    def __init__(self, name: str, group: List[str]):
+    def __init__(self, name: str, group: List[str], qty: int):
         self.id = name
-        playable = group.copy()
-        playable.remove(name)
+        playable = []
+        for _ in range(qty):
+            playable += group.copy()
+            playable.remove(name)
         random.shuffle(playable)
         self.eligible_opponents = playable
         self.games_played = 0
+        if olympic_mode:
+            self.games_played = -len(playable)
         self.games_refereed = 0
         self._backup_opponents = playable.copy()
         self.history = ''  # g = Game, r = Referee, f = Free. example: 'ggrgfg'
@@ -68,14 +87,20 @@ class TeamStats:
         self.eligible_opponents.extend(self._backup_opponents)
 
 
-def reformat_teams(given_groups):
+def reformat_teams(given_groups, group_repeats):
     """
     replace team with TeamStats object
     """
     new_groups = []
+    i = 0
     for group in given_groups:
-        new_group = [TeamStats(name=team, group=group) for team in group]
+        if olympic_mode:
+            qty = int(group_repeats[i])
+        else:
+            qty = 1
+        new_group = [TeamStats(name=team, group=group, qty=qty) for team in group]
         new_groups.append(new_group)
+        i += 1
     return new_groups
 
 
@@ -85,7 +110,7 @@ def print_table(output_matrix):
     """
     for i in range(COURTS_TO_USE * 3):
         to_output = ""
-        for j in range(ROUNDS):
+        for j in range(len(output_matrix)):
             to_output = to_output + "\t\t" + output_matrix[j][i]
         print(to_output[2:])
 
@@ -121,9 +146,18 @@ def run_sim(groups):
     """
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
-    groups = reformat_teams(groups)
+    groups = reformat_teams(groups, group_repeats)
     match_up_score = 0
     for x in range(ROUNDS):
+        if olympic_mode:
+            match_up_score += 20
+            all_done = True
+            for group in groups:
+                for team in group:
+                    if team.games_played != 0:
+                        all_done = False
+            if all_done:
+                break
         courts, occupied = one_court_per_group(groups)
         fill_in_missing_players(courts, groups, occupied)
         match_up_score += add_referees(courts, groups, occupied)
@@ -142,7 +176,10 @@ def one_court_per_group(groups: List[List[TeamStats]]):
     """
     This fills in 1 court per group to help balance the number of courts allocated to each group
     """
-    courts: List[List] = [[]] * COURTS_TO_USE
+    # courts: List[List] = [[]] * COURTS_TO_USE  # crashes code in olympic_mode due to mutable lists *angry face*
+    courts = []
+    for _ in range(COURTS_TO_USE):
+        courts.append([])
     occupied = []  # teams which are busy.
     for court_id, group in enumerate(groups):
         i, j = 9999, 0
@@ -151,7 +188,10 @@ def one_court_per_group(groups: List[List[TeamStats]]):
                 i = team.games_played
                 j = k
         if not group[j].eligible_opponents:
-            group[j].refresh_eligible()
+            if olympic_mode:
+                continue
+            else:
+                group[j].refresh_eligible()
         courts[court_id] = [group[j].id, group[j].eligible_opponents[0], court_id]
         # update team information so that the teams don't repeat.
         occupied.append(group[j].id)
@@ -176,10 +216,10 @@ def fill_in_missing_players(courts, groups, occupied):
         # find team with the least games
         least = min(team.games_played for group in groups for team in group)
         escape = False
-        for i in range(200):  # pick a group at random upto 100 times to find an available team.
+        for i in range(400):  # pick a group at random up to 400 times to find an available team.
             if escape:  # need to break out of 3 while loops, so this is how I did it.
                 break
-            if i == 100:
+            if i % 40 == 0:  # if 40 random groups don't work, be less picky
                 least += 1
             group_no = random.randint(0, len(groups) - 1)
             group = groups[group_no]
@@ -189,9 +229,12 @@ def fill_in_missing_players(courts, groups, occupied):
                     break
                 if team.id in occupied:  # the team is already playing
                     continue
-                if team.games_played == least:  # if no team has played less than this one
+                if team.games_played <= least:  # if no team has played less than this one
                     if not team.eligible_opponents:
-                        team.refresh_eligible()
+                        if olympic_mode:
+                            break
+                        else:
+                            team.refresh_eligible()
                     for team2 in group:
                         if team2.id not in team.eligible_opponents:
                             continue
@@ -218,7 +261,13 @@ def add_referees(courts, groups, occupied):
     match_up_score = 0  # how bad the setup of matches is
     for court in courts:
         if not court:
-            raise EmptyCourtException
+            if olympic_mode:
+                court.append("N/A     ")
+                court.append("N/A     ")
+                court.append("N/A     ")
+                continue
+            else:
+                raise EmptyCourtException
         group = groups[court[2]]
         min_refs = 9999  # minimum number of games refereed by a team in the group
         best_team = None  # team with the least referees
