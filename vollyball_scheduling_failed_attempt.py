@@ -9,7 +9,7 @@ A solution is a list of rounds
 A round is a list of matches
 A match is a tuple of referee, left side player and right side player
 """
-
+print(not [])
 import random
 from typing import List, Tuple
 

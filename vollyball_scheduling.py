@@ -9,6 +9,8 @@ Tries to minimize score =
     + (max(games played per team) - min(games played per team)) * 5
     + sum(max(games played per team) - min(games played per team) for each group) * 2
     + sum(max(games played or refereed per team) - min(games played or refereed per team) for each group)
+    + function describing how well mixed a teams actions are (so game, free, game is better than game, game, free)
+    + [olympic mode only] number of rounds * 20
 
 The code in this file was written jointly by Michael Howlett, David Howlett and Robert Howlett.
 To enable easy deployment we put all the logic in a single file so that it can be pasted into
