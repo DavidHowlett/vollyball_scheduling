@@ -8,9 +8,8 @@ https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
 
 TODO: make there a preference for a team to play on home turf
-      output friendlies in a better format
-      massively reduce number of friendlies. create "group_info", which demands first game is between critical teams
       implement a "team cant play" defined by user if team has a birthday
+      shuffle group_info automatically
 """
 
 import copy
@@ -36,11 +35,14 @@ ORIGINAL_GROUPS = [
     ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BHJ1"]]
 BASES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
-NUM_OF_SIMULATION: int = 1  # number of times it tries to produce a setup, higher improves matching but slows program
+NUM_OF_SIMULATION: int = 100  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
-NUM_OF_COURTS = 7
+NUM_OF_COURTS = len(BASES)
 WEEKS_NOT_PLAYABLE = [11, 12, 13]
-COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // 3)
+total = 0
+for group in ORIGINAL_GROUPS:
+    total += int(len(group) / 3)
+COURTS_TO_USE = min(NUM_OF_COURTS, total)
 
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 # debugging is easier if the randomness is not really random.
@@ -151,21 +153,24 @@ def run_sims(groups):
     best_output_matrix = []
     best_match_up_score = 999999  # This will be overridden later
     best_friendlies = []
+    best_groups_info = []
     average_match_up_score = 0
     friendly_count = 0
     for _ in range(NUM_OF_SIMULATION):  # run the setup "NUM_OF_SIMULATION" times and picks best
         # Michael found another bug which crashes the code once every few hundred games.
         # where if for all teams the [teams they can play against] are already playing someone else, no game gets
         # added causing an empty court and a crash. Due to rarity, we just catch the error and continue.
-        match_up_score, output_matrix, result_groups = run_sim(copy.deepcopy(groups))
+        match_up_score, output_matrix, result_groups, groups_info = run_sim(copy.deepcopy(groups))
         friendlies, friendly_count = find_friendlies(result_groups)
         match_up_score = get_score(result_groups, match_up_score, friendly_count)
         if match_up_score < best_match_up_score:
             best_match_up_score = match_up_score
             best_output_matrix = output_matrix
             best_friendlies = friendlies
+            best_groups_info = groups_info
         average_match_up_score += match_up_score / NUM_OF_SIMULATION
-    return best_output_matrix, average_match_up_score, best_match_up_score, best_friendlies, friendly_count
+    return best_output_matrix, average_match_up_score, best_match_up_score, \
+        best_friendlies, friendly_count, best_groups_info
 
 
 def run_sim(groups):
@@ -190,12 +195,15 @@ def run_sim(groups):
         courts = []
         for _ in range(COURTS_TO_USE):
             courts.append([])
-        if x+1 not in WEEKS_NOT_PLAYABLE:
+        if x + 1 not in WEEKS_NOT_PLAYABLE:
             fill_in_courts(courts, groups, occupied, groups_info)
         for group_id, group in enumerate(groups):
             for team in group:
                 if len(team.history) <= x:
                     team.history += 'f'
+            for pairs_list in groups_info[group_id]:
+                if groups_info[group_id][pairs_list]:
+                    random.shuffle(groups_info[group_id][pairs_list])
             if groups_info[group_id][len(groups_info[group_id]) - 1]:
                 # groups_info[group_id][2] = []
                 groups_info[group_id][len(groups_info[group_id])] = []
@@ -203,46 +211,54 @@ def run_sim(groups):
         for court in courts:
             to_output.extend(court)
         output_matrix.append(to_output)
-    print(groups_info)
-    return match_up_score, output_matrix, groups
+    # print(groups_info)
+    return match_up_score, output_matrix, groups, groups_info
 
 
 def fill_in_courts(courts, groups, occupied, groups_info):
     """
     fills in players for all courts with some randomness
     """
+    # find team with the least games
+    least = min(team.games_played for group in groups for team in group)
+    desperation = 0  # how desperate you are to find a match
+    escape = True
     for court_id, court in enumerate(courts):
+        # random.seed(10)  # RANDOM SEED RANDOM SEED RANDOM SEED RANDOM SEED RANDOM SEED RANDOM SEED RANDOM SEED
         if court:
             # Court already filled
             continue
-        # find team with the least games
-        least = min(team.games_played for group in groups for team in group)
+        if not escape:  # if it couldn't find a successful match despite many attempts
+            break
         escape = False
-        for i in range(20):  # pick a group at random up to 20 times to find an available team.
+        for i in range(200):  # pick a group at random up to 20 times to find an available team.
             if escape:  # need to break out of 3 while loops, so "escape" variable needed.
                 break
-            if i % 5 == 0:  # if 5 random groups don't work, be less picky (lower numbers increase randomness)
-                least += 1
+            if (i + 1) % 10 == 0:  # if 5 random groups don't work, be less picky (lower numbers increase randomness)
+                desperation += 1
             group_no = random.randint(0, len(groups) - 1)
             group = groups[group_no]
             escape = False
-            for team1 in group:
+            min_pairs = -(desperation + 1)  # pick on pairs with least games played
+            for j in groups_info[group_no]:  # j = number of times each of the pairs have played each other.
                 if escape:
                     break
-                if team1.id in occupied:  # the team is already playing
-                    continue
-                if team1.games_played <= least:  # if no team has played less than this one
-                    if not team1.eligible_opponents:
-                        team1.refresh_eligible()
-                    for team2 in group:
-                        if team2.id not in team1.eligible_opponents:
+                if groups_info[group_no][j]:
+                    min_pairs += 1
+                    if min_pairs > 0:
+                        break
+                    for pair in groups_info[group_no][j]:
+                        if pair[0] in occupied or pair[1] in occupied:
                             continue
-                        if team2.id in occupied:
-                            continue
-                        if team2.games_played > least + 1:
-                            continue
-                        # a game shall be played between team and team2 (unless team3 can't be found)
-                        #  list of possible opponents that the 2 teams can face
+                        team1, team2 = 'error', 'error'  # stops pycharm whinging
+                        for team1 in group:
+                            if team1.id == pair[0]:
+                                break
+                        for team2 in group:
+                            if team2.id == pair[1]:
+                                break
+                        if team1.games_played + team2.games_played >= (least * 2) + desperation:
+                            continue  # look for teams who have played less games
                         opponents = team1.eligible_opponents + team2.eligible_opponents
                         to_remove = []
                         for team in opponents:
@@ -285,21 +301,23 @@ def fill_in_courts(courts, groups, occupied, groups_info):
                         team2.play(team1.id, team3.id)
                         team3.play(team1.id, team2.id)
                         group_matches = groups_info[group_no]
-                        pairs = [[team1.id, team2.id], [team2.id, team1.id], [team2.id, team3.id], [team3.id, team2.id],
+                        pairs = [[team1.id, team2.id],  # pairs which could be in groups_info
+                                 [team2.id, team3.id], [team3.id, team2.id],
                                  [team1.id, team3.id], [team3.id, team1.id]]
                         for x in group_matches:
-                            for pair in pairs:
-                                if pair in group_matches[x]:
+                            for pair2 in pairs:
+                                if pair2 in group_matches[x]:
                                     # increase number of matches between that pair by 1
-                                    group_matches[x].remove(pair)
-                                    group_matches[x+1].append(pair)
-                                    pairs.remove(pair)
+                                    group_matches[x].remove(pair2)
+                                    group_matches[x + 1].append(pair2)
+                                    pairs.remove(pair2)
                         escape = True  # move on to next court
                         break
 
 
 def find_friendlies(groups):
     """
+    could be made more efficient by using groups_info, but I can't be bothered
     :return: list of matches that are friendly and not ranked along with the count
     """
     friendlies = []
@@ -318,7 +336,7 @@ def find_friendlies(groups):
                         friendlies_in_group += [[team.id, team2.id]]
                         friendly_count += 1
         friendlies += [friendlies_in_group]
-    return friendlies, friendly_count/2
+    return friendlies, friendly_count / 2
 
 
 def get_score(groups, match_up_score, friendly_count):
@@ -326,7 +344,7 @@ def get_score(groups, match_up_score, friendly_count):
     given a partially calculated score, and the data structure describing the solution,
     calculate the final score
     """
-    match_up_score += friendly_count/2
+    match_up_score += friendly_count*1.1
     min_games = min(team.games_played for group in groups for team in group)
     max_games = max(team.games_played for group in groups for team in group)
     for group in groups:
@@ -358,14 +376,16 @@ def score_history(history):
         else:
             repetitions = 0
         last = x
-    return total_score*0.05
+    return total_score * 0.05
 
 
 def main():
     """
     Run the simulation and print the results
     """
-    output_matrix, average_match_up_score, match_up_score, friendlies, friendly_count = run_sims(ORIGINAL_GROUPS)
+    output_matrix, average_match_up_score, match_up_score, friendlies, friendly_count, info = run_sims(ORIGINAL_GROUPS)
+    for group in info:
+        print(group)
     print_table(output_matrix)
     print_friendlies(friendlies)
     print(
