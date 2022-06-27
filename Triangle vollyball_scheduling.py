@@ -9,6 +9,8 @@ so that users don't need to install python and deal with the issues associated w
 
 TODO: make there a preference for a team to play on home turf
       output friendlies in a better format
+      massively reduce number of friendlies. create "group_info", which demands first game is between critical teams
+      implement a "team cant play" defined by user if team has a birthday
 """
 
 import copy
@@ -34,7 +36,7 @@ ORIGINAL_GROUPS = [
     ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BHJ1"]]
 BASES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
-NUM_OF_SIMULATION: int = 100  # number of times it tries to produce a setup, higher improves matching but slows program
+NUM_OF_SIMULATION: int = 1  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
 NUM_OF_COURTS = 7
 WEEKS_NOT_PLAYABLE = [11, 12, 13]
@@ -123,10 +125,10 @@ def extra_occupied(groups, team):
     if team_type == 'S' or team_type == 's':  # Single, don't exclude anyone
         exclude = ' '  # empty
     if exclude == '':
-        print(team, " doesn't follow correct formatting and is of unknown type")
-        print("currently it's:  ", team_type,
-              "   but needs to be one of M (mens), L (ladies), J (juniors), X (mixed), S (single)")
-        assert 0 == 0, "program stop."
+        print(team.id, " doesn't follow correct formatting and is of unknown type")
+        print("The type read is currently: ", team_type,
+              "  but needs to be one of M (mens), L (ladies), J (juniors), X (mixed), S (single)")
+        exit()
     team_loc = team.id[0:1]  # where the team is based
     for group in groups:
         for team2 in group:
@@ -155,10 +157,7 @@ def run_sims(groups):
         # Michael found another bug which crashes the code once every few hundred games.
         # where if for all teams the [teams they can play against] are already playing someone else, no game gets
         # added causing an empty court and a crash. Due to rarity, we just catch the error and continue.
-        try:
-            match_up_score, output_matrix, result_groups = run_sim(copy.deepcopy(groups))
-        except EmptyCourtException:
-            continue
+        match_up_score, output_matrix, result_groups = run_sim(copy.deepcopy(groups))
         friendlies, friendly_count = find_friendlies(result_groups)
         match_up_score = get_score(result_groups, match_up_score, friendly_count)
         if match_up_score < best_match_up_score:
@@ -176,6 +175,15 @@ def run_sim(groups):
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups)
+    groups_info = []  # list where each item is for a group. group is a dict containing {number of games: [pairs]}
+    for group in groups:
+        pairings = []
+        for i, team1 in enumerate(group):
+            for j, team2 in enumerate(group):
+                if j == i:  # don't include teams facing themselves and have only one of a vs b, and b vs a
+                    break
+                pairings.append([team1.id, team2.id])
+        groups_info.append({0: pairings, 1: []})  # each pairing has been played 0 times.
     match_up_score = 0
     for x in range(ROUNDS):
         occupied = []  # TODO: fill in occupied based on which teams can't play
@@ -183,19 +191,23 @@ def run_sim(groups):
         for _ in range(COURTS_TO_USE):
             courts.append([])
         if x+1 not in WEEKS_NOT_PLAYABLE:
-            fill_in_courts(courts, groups, occupied)
-        for group in groups:
+            fill_in_courts(courts, groups, occupied, groups_info)
+        for group_id, group in enumerate(groups):
             for team in group:
                 if len(team.history) <= x:
                     team.history += 'f'
+            if groups_info[group_id][len(groups_info[group_id]) - 1]:
+                # groups_info[group_id][2] = []
+                groups_info[group_id][len(groups_info[group_id])] = []
         to_output = []
         for court in courts:
             to_output.extend(court)
         output_matrix.append(to_output)
+    print(groups_info)
     return match_up_score, output_matrix, groups
 
 
-def fill_in_courts(courts, groups, occupied):
+def fill_in_courts(courts, groups, occupied, groups_info):
     """
     fills in players for all courts with some randomness
     """
@@ -230,8 +242,8 @@ def fill_in_courts(courts, groups, occupied):
                         if team2.games_played > least + 1:
                             continue
                         # a game shall be played between team and team2 (unless team3 can't be found)
-                        opponents = [value for value in team1.eligible_opponents if value in team2.eligible_opponents]
                         #  list of possible opponents that the 2 teams can face
+                        opponents = team1.eligible_opponents + team2.eligible_opponents
                         to_remove = []
                         for team in opponents:
                             if team in occupied:
@@ -243,38 +255,46 @@ def fill_in_courts(courts, groups, occupied):
                         for team in to_remove:
                             opponents.remove(team)
                         if not opponents:
-                            opponents = team1.eligible_opponents + team2.eligible_opponents
-                            to_remove = []
-                            for team in opponents:
-                                if team in occupied:
-                                    to_remove += [team]
-                                elif team == team1.id:
-                                    to_remove += [team]
-                                elif team == team2.id:
-                                    to_remove += [team]
-                            for team in to_remove:
-                                opponents.remove(team)
-                            if not opponents:
-                                break  # nobody suitable to play if team 2 chosen, try again
-                        min_games = 99999
-                        best_team = "error"
-                        for team3 in group:
-                            if team3.games_played < min_games and team3.id in opponents:
-                                min_games = team3.games_played
-                                best_team = team3
+                            break  # nobody suitable to play if team 2 chosen, try again
+                        opponents_dict = {}
+                        for team in opponents:
+                            if team in opponents_dict:
+                                opponents_dict[team] += 1
+                            else:
+                                opponents_dict[team] = 1
+                        max = 0
+                        best_team = "error"  # to be overwritten
+                        for team in opponents_dict:
+                            if opponents_dict[team] > max:
+                                max = opponents_dict[team]
+                                best_team = team
+                        for team in group:
+                            if team.id == best_team:
+                                best_team = team
+                                break
                         team3 = best_team
                         courts[court_id] = [
                             team1.id,
                             team2.id,
                             team3.id,
                         ]
-                        occupied += extra_occupied(groups, team1)
-                        occupied += extra_occupied(groups, team2)
+                        occupied += extra_occupied(groups, team1)  # as team is occupied, it can't play again this round
+                        occupied += extra_occupied(groups, team2)  # preventing double booking.
                         occupied += extra_occupied(groups, team3)
                         team1.play(team2.id, team3.id)
                         team2.play(team1.id, team3.id)
                         team3.play(team1.id, team2.id)
-                        escape = True
+                        group_matches = groups_info[group_no]
+                        pairs = [[team1.id, team2.id], [team2.id, team1.id], [team2.id, team3.id], [team3.id, team2.id],
+                                 [team1.id, team3.id], [team3.id, team1.id]]
+                        for x in group_matches:
+                            for pair in pairs:
+                                if pair in group_matches[x]:
+                                    # increase number of matches between that pair by 1
+                                    group_matches[x].remove(pair)
+                                    group_matches[x+1].append(pair)
+                                    pairs.remove(pair)
+                        escape = True  # move on to next court
                         break
 
 
