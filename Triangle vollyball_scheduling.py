@@ -7,8 +7,9 @@ To enable easy deployment, we put all the logic in a single file so that it can 
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
 
-TODO: make there a preference for a team to play on home turf
+TODO: make there a preference for a team to play on home turf (and balance it out)
       implement a "team cant play" defined by user to account for a team having a birthday and not wanting to play
+      (possibly) when removing friendly games, do so randomly a few times and pick best.
 """
 
 import copy
@@ -133,6 +134,69 @@ def print_friendlies(friendlies):
             print(pair[0], "\t", pair[1])
 
 
+def remove_friendlies(groups, output_matrix, groups_info):
+    """
+    looks though the games and tries to remove triangles which are all friendlies.
+    Does a systematic sweep from the end (so blanks are at end)
+    TODO?: add randomness then loop through several times and pick best result
+    """
+    rounds = len(output_matrix)
+    for round in range(rounds):
+        round += 1
+        for game in range(int(len(output_matrix[rounds-round])/3)):
+            game = game*3
+            team1 = output_matrix[rounds - round][game]
+            team2 = output_matrix[rounds - round][game + 1]
+            team3 = output_matrix[rounds - round][game + 2]
+            group_found = False
+            group, group_no = 0, 0  # stops pycharm complaining
+            for group_no, group in enumerate(groups):  # find the group the game belongs to
+                for team in group:
+                    if team.id == team1:
+                        group_found = True
+                        break
+                if group_found:
+                    break
+            if not group_found:
+                print("error, group not found in remove friendlies")
+                return groups, output_matrix, groups_info
+            first = True
+            all_friendly = True
+            pairs = [[team1, team2], [team2, team1], [team1, team3], [team3, team1], [team2, team3], [team3, team2]]
+            for pair_qty in groups_info[group_no]:
+                if groups_info[group_no][pair_qty]:
+                    if first:
+                        first = False
+                        for pair in pairs:
+                            if pair in groups_info[group_no][pair_qty]:
+                                all_friendly = False
+                                break
+                    elif all_friendly:  # then we will undo game, starting with updating groups_info
+                        for pair in pairs:
+                            if pair in groups_info[group_no][pair_qty]:
+                                groups_info[group_no][pair_qty].remove(pair)
+                                groups_info[group_no][pair_qty-1].append(pair)
+            if all_friendly:  # remove rest of info about match
+                output_matrix[rounds - round][game] = 'free'
+                output_matrix[rounds - round][game+1] = 'free'
+                output_matrix[rounds - round][game+2] = 'free'
+                for team in group:
+                    if team.id == team1:
+                        team.games_played -= 1
+                        team.opponents_played.remove(team2)
+                        team.opponents_played.remove(team3)
+                    if team.id == team2:
+                        team.games_played -= 1
+                        team.opponents_played.remove(team1)
+                        team.opponents_played.remove(team3)
+                    if team.id == team3:
+                        team.games_played -= 1
+                        team.opponents_played.remove(team1)
+                        team.opponents_played.remove(team2)
+                # doesn't correct team history,
+    return groups, output_matrix, groups_info
+
+
 def run_sims(groups):
     """
     generate a collection of solutions with a bit of randomness and return the best one,
@@ -149,6 +213,7 @@ def run_sims(groups):
         # where if for all teams the [teams they can play against] are already playing someone else, no game gets
         # added causing an empty court and a crash. Due to rarity, we just catch the error and continue.
         match_up_score, output_matrix, result_groups, groups_info = run_sim(copy.deepcopy(groups))
+        result_groups, output_matrix, groups_info = remove_friendlies(result_groups, output_matrix, groups_info)
         friendlies, friendly_count = find_friendlies(result_groups)
         match_up_score = get_score(result_groups, match_up_score, friendly_count)
         if match_up_score < best_match_up_score:
