@@ -7,7 +7,8 @@ To enable easy deployment, we put all the logic in a single file so that it can 
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
 
-TODO: make there a preference for a team to play on home turf (and balance it out)
+TODO: time optimisations
+      add comments so someone else can read it
       (possibly) when removing friendly games, do so randomly a few times and pick best.
 """
 
@@ -21,19 +22,19 @@ ORIGINAL_GROUPS = [
     ["OXL1", "FBL1", "BSL1", "MHL1", "SPL1", "NBL1", "OXL2", "SBL1", "OUL1", "RAL1", "MHL2"],
     ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1", "NBX1", "SPX2"],
     ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BHJ1"]]
-BASES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
+VENUES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
 
 # This enables a team to not play on a selected week. ['TEAM', week]
 DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
-                ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
-                ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
-                ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
-                ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
-                ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
+                 ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
+                 ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
+                 ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+                 ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+                 ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 NUM_OF_SIMULATION: int = 100  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
-NUM_OF_COURTS = len(BASES)
+NUM_OF_COURTS = len(VENUES)
 WEEKS_NOT_PLAYABLE = [11, 12, 13]
 total = 0
 for group in ORIGINAL_GROUPS:
@@ -41,8 +42,10 @@ for group in ORIGINAL_GROUPS:
 COURTS_TO_USE = min(NUM_OF_COURTS, total)
 
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
+
+
 # debugging is easier if the randomness is not really random.
-random.seed(10)
+# random.seed(10)
 
 
 class TeamStats:
@@ -150,8 +153,8 @@ def remove_friendlies(groups, output_matrix, groups_info):
     rounds = len(output_matrix)
     for round in range(rounds):
         round += 1
-        for game in range(int(len(output_matrix[rounds-round])/3)):
-            game = game*3
+        for game in range(int(len(output_matrix[rounds - round]) / 3)):
+            game = game * 3
             team1 = output_matrix[rounds - round][game]
             team2 = output_matrix[rounds - round][game + 1]
             team3 = output_matrix[rounds - round][game + 2]
@@ -182,11 +185,11 @@ def remove_friendlies(groups, output_matrix, groups_info):
                         for pair in pairs:
                             if pair in groups_info[group_no][pair_qty]:
                                 groups_info[group_no][pair_qty].remove(pair)
-                                groups_info[group_no][pair_qty-1].append(pair)
+                                groups_info[group_no][pair_qty - 1].append(pair)
             if all_friendly:  # remove rest of info about match
                 output_matrix[rounds - round][game] = 'free'
-                output_matrix[rounds - round][game+1] = 'free'
-                output_matrix[rounds - round][game+2] = 'free'
+                output_matrix[rounds - round][game + 1] = 'free'
+                output_matrix[rounds - round][game + 2] = 'free'
                 for team in group:
                     if team.id == team1:
                         team.games_played -= 1
@@ -204,6 +207,76 @@ def remove_friendlies(groups, output_matrix, groups_info):
     return groups, output_matrix, groups_info
 
 
+def home_games(output_matrix):
+    homesickness = {}  # {'team name': home_sickness}  home_sickness = how eager team is to play at home
+    new_output_matrix = []
+    for team in ALL_TEAMS:
+        homesickness[team] = 0
+    for _ in output_matrix:  # fill new_output_matrix with free slots
+        all_free = []
+        for _ in VENUES:
+            all_free.append('free')
+            all_free.append('free')
+            all_free.append('free')
+        new_output_matrix.append(all_free)
+    input_empty = False
+    non_found = False
+    max_homesickness = 0
+    away_games = 0
+    total_games = 0
+    while not input_empty:
+        input_empty = True
+        # for team in homesickness:
+        #     if homesickness[team] > max_homesickness:
+        #         max_homesickness = homesickness[team]
+        # max_homesickness -= 1  # allows for inequality, and marginal speed improvements
+        if non_found:
+            max_homesickness -= 1
+        non_found = True
+        for round, set in enumerate(output_matrix):
+            for location, team in enumerate(set):
+                if team != 'free':  # call in America
+                    input_empty = False
+                    if homesickness[team] > max_homesickness:
+                        for i, ven in enumerate(VENUES):
+                            if ven[0:2] == team[0:2] or max_homesickness < -10:  # this is that teams home, or desperate
+                                if max_homesickness < -10:
+                                    away_games += 1
+                                if new_output_matrix[round][i * 3] == 'free':  # match here
+                                    total_games += 1
+                                    non_found = False
+                                    new_output_matrix[round][i * 3] = team
+                                    set[location] = 'free'
+                                    if location % 3 == 0:
+                                        new_output_matrix[round][i * 3 + 1] = set[location + 1]
+                                        new_output_matrix[round][i * 3 + 2] = set[location + 2]
+                                        set[location + 1] = 'free'
+                                        set[location + 2] = 'free'
+                                    if location % 3 == 1:
+                                        new_output_matrix[round][i * 3 + 1] = set[location - 1]
+                                        new_output_matrix[round][i * 3 + 2] = set[location + 1]
+                                        set[location - 1] = 'free'
+                                        set[location + 1] = 'free'
+                                    if location % 3 == 2:
+                                        new_output_matrix[round][i * 3 + 1] = set[location - 1]
+                                        new_output_matrix[round][i * 3 + 2] = set[location - 2]
+                                        set[location - 1] = 'free'
+                                        set[location - 2] = 'free'
+                                    # max_homesickness += 0.2  # prevents mass game locations being decided
+                                    homesickness[team] -= 2  # update homesickness
+                                    homesickness[new_output_matrix[round][i * 3 + 1]] += 1
+                                    homesickness[new_output_matrix[round][i * 3 + 2]] += 1
+                                    if homesickness[new_output_matrix[round][i * 3 + 1]] > max_homesickness:
+                                        max_homesickness += 1
+                                    if homesickness[new_output_matrix[round][i * 3 + 2]] > max_homesickness:
+                                        max_homesickness += 1
+    matchup_penalty = 0
+    for team in homesickness:
+        if homesickness[team] > 0:
+            matchup_penalty += homesickness[team] + (1 + homesickness[team] / 10)
+    return new_output_matrix, away_games, total_games, matchup_penalty
+
+
 def run_sims(groups):
     """
     generate a collection of solutions with a bit of randomness and return the best one,
@@ -213,6 +286,8 @@ def run_sims(groups):
     best_match_up_score = 999999  # This will be overridden later
     best_friendlies = []
     best_groups_info = []
+    best_total_games = 0
+    best_away_games = 0
     average_match_up_score = 0
     best_friendly_count = 0
     for _ in range(NUM_OF_SIMULATION):  # run the setup "NUM_OF_SIMULATION" times and picks best
@@ -221,6 +296,9 @@ def run_sims(groups):
         # added causing an empty court and a crash. Due to rarity, we just catch the error and continue.
         match_up_score, output_matrix, result_groups, groups_info = run_sim(copy.deepcopy(groups))
         result_groups, output_matrix, groups_info = remove_friendlies(result_groups, output_matrix, groups_info)
+        output_matrix, away_games, total_games, penalty = home_games(output_matrix)
+        match_up_score += penalty / 3
+        match_up_score += away_games * 10
         friendlies, friendly_count = find_friendlies(result_groups)
         match_up_score = get_score(result_groups, match_up_score, friendly_count)
         if match_up_score < best_match_up_score:
@@ -229,9 +307,11 @@ def run_sims(groups):
             best_friendlies = friendlies
             best_friendly_count = friendly_count
             best_groups_info = groups_info
+            best_total_games = total_games * 3
+            best_away_games = away_games
         average_match_up_score += match_up_score / NUM_OF_SIMULATION
     return best_output_matrix, average_match_up_score, best_match_up_score, \
-        best_friendlies, best_friendly_count, best_groups_info
+        best_friendlies, best_friendly_count, best_groups_info, best_total_games, best_away_games
 
 
 def run_sim(groups):
@@ -293,7 +373,7 @@ def fill_in_courts(courts, groups, occupied, groups_info):
             # Court already filled
             continue
         if not escape:  # if it couldn't find a successful match despite many attempts
-            break
+            break  # don't bother finding another match
         escape = False
         failed_groups = []
         for i in range(200):  # pick a group at random up to 20 times to find an available team.
@@ -456,7 +536,8 @@ def main():
     """
     Run the simulation and print the results
     """
-    output_matrix, average_match_up_score, match_up_score, friendlies, friendly_count, info = run_sims(ORIGINAL_GROUPS)
+    output_matrix, average_match_up_score, match_up_score, friendlies, friendly_count, \
+        info, total_games, away_games = run_sims(ORIGINAL_GROUPS)
     for group in info:
         print(group)
     print_table(output_matrix)
@@ -466,7 +547,9 @@ def main():
         "best score compared to average of :",
         str(round(-average_match_up_score, 2)),
     )
+    print("There are a total of:", int(total_games), "matches")
     print("There are a total of:", int(friendly_count), "friendly matches")
+    print("There are a total of:", int(away_games), "away matches")
 
 
 if __name__ == "__main__":
