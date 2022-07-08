@@ -8,7 +8,6 @@ https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
 
 TODO: make there a preference for a team to play on home turf (and balance it out)
-      implement a "team cant play" defined by user to account for a team having a birthday and not wanting to play
       (possibly) when removing friendly games, do so randomly a few times and pick best.
 """
 
@@ -23,6 +22,14 @@ ORIGINAL_GROUPS = [
     ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1", "NBX1", "SPX2"],
     ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BHJ1"]]
 BASES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
+
+# This enables a team to not play on a selected week. ['TEAM', week]
+DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
+                ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
+                ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
+                ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+                ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+                ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 NUM_OF_SIMULATION: int = 100  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
@@ -246,6 +253,9 @@ def run_sim(groups):
     match_up_score = 0
     for x in range(ROUNDS):
         occupied = []  # TODO: fill in occupied based on which teams can't play
+        for ban in DATES_NO_PLAY:
+            if ban[1] + 1 == x:
+                occupied.append(ban[0])
         courts = []
         for _ in range(COURTS_TO_USE):
             courts.append([])
@@ -417,7 +427,7 @@ def get_score(groups, match_up_score, friendly_count):
         for team in group:
             match_up_score += score_history(team.history)
             match_up_score -= team.games_played
-    match_up_score += (max_games - min_games) * 5
+    match_up_score += ((max_games - min_games) ** 2) * 10
     return match_up_score
 
 
