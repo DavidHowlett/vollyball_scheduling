@@ -25,14 +25,15 @@ ORIGINAL_GROUPS = [
 VENUES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
 
 # This enables a team to not play on a selected week. ['TEAM', week]
-DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
-                 ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
-                 ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
-                 ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
-                 ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
-                 ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
+DATES_NO_PLAY = []
+# DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
+#                  ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
+#                  ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
+#                  ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+#                  ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
+#                  ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
-NUM_OF_SIMULATION: int = 100  # number of times it tries to produce a setup, higher improves matching but slows program
+NUM_OF_SIMULATION: int = 1000  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
 NUM_OF_COURTS = len(VENUES)
 WEEKS_NOT_PLAYABLE = [11, 12, 13]
@@ -45,7 +46,7 @@ assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 gro
 
 
 # debugging is easier if the randomness is not really random.
-# random.seed(10)
+random.seed(10)
 
 
 class TeamStats:
@@ -239,9 +240,29 @@ def home_games(output_matrix):
                     input_empty = False
                     if homesickness[team] > max_homesickness:
                         for i, ven in enumerate(VENUES):
-                            if ven[0:2] == team[0:2] or max_homesickness < -10:  # this is that teams home, or desperate
-                                if max_homesickness < -10:
+                            if ven[0:2] == team[0:2] or max_homesickness < -20:  # this is that teams home, or desperate
+                                if max_homesickness < -20:
                                     away_games += 1
+                                elif max_homesickness < -10:  # try kicking out the other triangle.
+                                    for j, ven2 in enumerate(VENUES):
+                                        if new_output_matrix[round][(i * 3) + 1][0:2] == ven2[0:2] and\
+                                                new_output_matrix[round][(j * 3)] == 'free':
+                                            new_output_matrix[round][(j * 3)] = new_output_matrix[round][(i * 3) + 1]
+                                            new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][(i * 3)]
+                                            new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][
+                                                (i * 3) + 2]
+                                            new_output_matrix[round][(i * 3)] = 'free'
+                                            new_output_matrix[round][(i * 3) + 1] = 'free'
+                                            new_output_matrix[round][(i * 3) + 2] = 'free'
+                                        if new_output_matrix[round][(i * 3) + 2][0:2] == ven2[0:2] and\
+                                                new_output_matrix[round][(j * 3)] == 'free':
+                                            new_output_matrix[round][(j * 3)] = new_output_matrix[round][(i * 3) + 2]
+                                            new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][
+                                                (i * 3) + 1]
+                                            new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][(i * 3)]
+                                            new_output_matrix[round][(i * 3)] = 'free'
+                                            new_output_matrix[round][(i * 3) + 1] = 'free'
+                                            new_output_matrix[round][(i * 3) + 2] = 'free'
                                 if new_output_matrix[round][i * 3] == 'free':  # match here
                                     total_games += 1
                                     non_found = False
@@ -298,7 +319,7 @@ def run_sims(groups):
         result_groups, output_matrix, groups_info = remove_friendlies(result_groups, output_matrix, groups_info)
         output_matrix, away_games, total_games, penalty = home_games(output_matrix)
         match_up_score += penalty / 3
-        match_up_score += away_games * 10
+        match_up_score += away_games * 9999  # Ban away games
         friendlies, friendly_count = find_friendlies(result_groups)
         match_up_score = get_score(result_groups, match_up_score, friendly_count)
         if match_up_score < best_match_up_score:
