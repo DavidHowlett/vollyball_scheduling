@@ -21,7 +21,7 @@ ORIGINAL_GROUPS = [
     ["RAM1", "SPM2", "OXM3", "NBM1", "FBM2", "MHM2", "BSM2"],
     ["OXL1", "FBL1", "BSL1", "MHL1", "SPL1", "NBL1", "OXL2", "SBL1", "OUL1", "RAL1", "MHL2"],
     ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1", "NBX1", "SPX2"],
-    ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BHJ1"]]
+    ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BSJ2"]]
 VENUES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
 
 # This enables a team to not play on a selected week. ['TEAM', week]
@@ -32,21 +32,9 @@ DATES_NO_PLAY = []
 #                  ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
-ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 NUM_OF_SIMULATION: int = 1000  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 26
-NUM_OF_COURTS = len(VENUES)
 WEEKS_NOT_PLAYABLE = [11, 12, 13]
-total = 0
-for group in ORIGINAL_GROUPS:
-    total += int(len(group) / 3)
-COURTS_TO_USE = min(NUM_OF_COURTS, total)
-
-assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
-
-
-# debugging is easier if the randomness is not really random.
-random.seed(10)
 
 
 class TeamStats:
@@ -251,15 +239,20 @@ def home_games(output_matrix):
                                             new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][(i * 3)]
                                             new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][
                                                 (i * 3) + 2]
+                                            homesickness[new_output_matrix[round][i * 3 + 1]] -= 3
+                                            homesickness[new_output_matrix[round][i * 3]] += 3
                                             new_output_matrix[round][(i * 3)] = 'free'
                                             new_output_matrix[round][(i * 3) + 1] = 'free'
                                             new_output_matrix[round][(i * 3) + 2] = 'free'
+
                                         if new_output_matrix[round][(i * 3) + 2][0:2] == ven2[0:2] and\
                                                 new_output_matrix[round][(j * 3)] == 'free':
                                             new_output_matrix[round][(j * 3)] = new_output_matrix[round][(i * 3) + 2]
                                             new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][
                                                 (i * 3) + 1]
                                             new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][(i * 3)]
+                                            homesickness[new_output_matrix[round][i * 3 + 2]] -= 3
+                                            homesickness[new_output_matrix[round][i * 3]] += 3
                                             new_output_matrix[round][(i * 3)] = 'free'
                                             new_output_matrix[round][(i * 3) + 1] = 'free'
                                             new_output_matrix[round][(i * 3) + 2] = 'free'
@@ -573,5 +566,14 @@ def main():
     print("There are a total of:", int(away_games), "away matches")
 
 
+NUM_OF_COURTS = len(VENUES)
+total = 0
+for group_ in ORIGINAL_GROUPS:
+    total += int(len(group_) / 3)
+COURTS_TO_USE = min(NUM_OF_COURTS, total)
+ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
+assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
+# debugging is easier if the randomness is not really random.
+random.seed(10)
 if __name__ == "__main__":
     main()
