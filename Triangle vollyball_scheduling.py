@@ -6,35 +6,33 @@ The code in this file was written Michael Howlett building on code written by Mi
 To enable easy deployment, we put all the logic in a single file so that it can be pasted into
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
-
-TODO: time optimisations
-      add comments so someone else can read it
-      (possibly) when removing friendly games, do so randomly a few times and pick best.
 """
 
 import copy
 import random
 from typing import List
 
-ORIGINAL_GROUPS = [
-    ["OXM1", "SPM1", "BSM1", "MHM1", "OXM2", "FBM1", "OUM1"],
-    ["RAM1", "SPM2", "OXM3", "NBM1", "FBM2", "MHM2", "BSM2"],
-    ["OXL1", "FBL1", "BSL1", "MHL1", "SPL1", "NBL1", "OXL2", "SBL1", "OUL1", "RAL1", "MHL2"],
-    ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1", "NBX1", "SPX2"],
-    ["RAJ1", "SPJ1", "BSJ1", "NBJ1", "RAJ2", "BSJ2"]]
-VENUES = ["BS1", "FB1", "MH1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1"]
+ORIGINAL_GROUPS = [["OXM1", "SPM1", "BSM1", "MHM1", "OXM2", "FBM1", "RAM1", "SPM2", "OXM3"],
+                   ["RAM2", "RAM3", "WEM1", "NBM1", "OUM1", "FBM2", "MHM2", "NBM2", "BSM2"],
+                   ["OXL1", "FBL1", "BSL1", "MHL1", "SPL1", "NBL1", "OXL2", "SBL1", "OUL1", "RAL1"],
+                   ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1"],
+                   ["MVX1", "SPX2", "WEX1", "RAX2", "NBX1", "SPX3"],
+                   ["RAJ1", "MVJ1", "BSJ1", "NBJ1", "RAJ2", "FAJ1", "SBJ1", "BSJ2"]]
+VENUES = ["BS1", "FB1", "MH1", "MV1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1", "SP2"]
 
 # This enables a team to not play on a selected week. ['TEAM', week]
-DATES_NO_PLAY = []
-# DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
+TEAMS_DATES_NO_PLAY = [["BSM1", 2], ["BSM1", 3], ["BSM1", 6], ["BSM1", 10], ["FAJ1", 10], ["BSL1", 2], ["BSL1", 10], ["MHL1", 24], ["OUL1", 9], ["OUL1", 10], ["OUL1", 11], ["OUL1", 14], ["OUL1", 23], ["OUL1", 24], ["OUL1", 25], ["OUL1", 26], ["OUL1", 28], ["FBL1", 1], ["FBL1", 11], ["SBL1", 6], ["SBL1", 8], ["SBL1", 10], ["SBL1", 11], ["SBL1", 15], ["SBL1", 18], ["SBL1", 20], ["SBL1", 28], ["SBL1", 29], ["SBL1", 30], ["BSM2", 8], ["BSM2", 28], ["OUM1", 1], ["OUM1", 9], ["OUM1", 10], ["OUM1", 11], ["OUM1", 14], ["OUM1", 23], ["OUM1", 24], ["OUM1", 25], ["OUM1", 26], ["OUM1", 28], ["WEM1", 3], ["WEM1", 6], ["WEM1", 7], ["WEM1", 10], ["WEM1", 18], ["WEM1", 19], ["WEX1", 3], ["WEX1", 6], ["WEX1", 7], ["WEX1", 10], ["WEX1", 18], ["WEX1", 19], ["MHX1", 24], ["MHX2", 24]]
+# TEAMS_DATES_NO_PLAY = [['OXM1', 3], ['SPM1', 3], ['BSM1', 3], ['MHM1', 3], ['OXM2', 3], ['FBM1', 3], ['OUL1', 3],
 #                  ['RAM1', 3], ['SPM2', 3], ['OXM3', 3], ['NBM1', 3], ['FBM2', 3], ['MHM2', 3], ['RAL1', 3],
 #                  ['OXL1', 3], ['FBL1', 3], ['BSL1', 3], ['SPL1', 3], ['NBL1', 3], ['OXL2', 3], ['SBL1', 3],
 #                  ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
-NUM_OF_SIMULATION: int = 1000  # number of times it tries to produce a setup, higher improves matching but slows program
-ROUNDS = 26
-WEEKS_NOT_PLAYABLE = [11, 12, 13]
+VENUES_DATES_NO_PLAY = [["BS1", 10], ["FB1", 11], ["MV1", 15], ["MV1", 16], ["MV1", 17], ["MV1", 18], ["MV1", 19], ["MV1", 20], ["MV1", 21], ["MV1", 22], ["MV1", 23], ["MV1", 25], ["MV1", 28], ["MV1", 29], ["MV1", 30], ["OX1", 1], ["OX1", 8], ["OX1", 9], ["OX1", 10], ["OX1", 11], ["OX1", 14], ["OX1", 23], ["OX1", 24], ["OX1", 25], ["OX1", 26], ["OX1", 28], ["OU1", 16], ["RA1", 7], ["RA1", 16], ["RA1", 19], ["RA1", 26], ["NB1", 28]]
+NUM_OF_SIMULATION: int = 10000000  # number of times it tries to produce a setup, higher improves matching but slows program
+ROUNDS = 27
+WEEKS_NOT_PLAYABLE = [12, 13, 27]
+OVERNIGHT_MODE = True  # if true, when it finds new best, outputs it. Used for if it will run for an unknown time.
 
 
 class TeamStats:
@@ -198,16 +196,9 @@ def remove_friendlies(groups, output_matrix, groups_info):
 
 def home_games(output_matrix):
     homesickness = {}  # {'team name': home_sickness}  home_sickness = how eager team is to play at home
-    new_output_matrix = []
     for team in ALL_TEAMS:
         homesickness[team] = 0
-    for _ in output_matrix:  # fill new_output_matrix with free slots
-        all_free = []
-        for _ in VENUES:
-            all_free.append('free')
-            all_free.append('free')
-            all_free.append('free')
-        new_output_matrix.append(all_free)
+    new_output_matrix = copy.deepcopy(blank_output_matrix)
     input_empty = False
     non_found = False
     max_homesickness = 0
@@ -284,7 +275,12 @@ def home_games(output_matrix):
                                         max_homesickness += 1
                                     if homesickness[new_output_matrix[round][i * 3 + 2]] > max_homesickness:
                                         max_homesickness += 1
+                                    break
     matchup_penalty = 0
+    for thing1 in new_output_matrix:
+        for i in range(len(thing1)):
+            if thing1[i] == 'Full':
+                thing1[i] = 'free'
     for team in homesickness:
         if homesickness[team] > 0:
             matchup_penalty += homesickness[team] + (1 + homesickness[team] / 10)
@@ -323,6 +319,12 @@ def run_sims(groups):
             best_groups_info = groups_info
             best_total_games = total_games * 3
             best_away_games = away_games
+            if OVERNIGHT_MODE:
+                print_table(output_matrix)
+                print_friendlies(friendlies)
+                print("Current best score is: ", -best_match_up_score)
+                print("Current number of friendlies is: ", best_friendly_count)
+                print("From a total of: ", best_total_games, " games")
         average_match_up_score += match_up_score / NUM_OF_SIMULATION
     return best_output_matrix, average_match_up_score, best_match_up_score, \
         best_friendlies, best_friendly_count, best_groups_info, best_total_games, best_away_games
@@ -331,7 +333,7 @@ def run_sims(groups):
 def run_sim(groups):
     """
     generate a single solution and partially scores it
-    """
+   """
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups)
@@ -347,12 +349,14 @@ def run_sim(groups):
     match_up_score = 0
     for x in range(ROUNDS):
         occupied = []  # TODO: fill in occupied based on which teams can't play
-        for ban in DATES_NO_PLAY:
+        for ban in TEAMS_DATES_NO_PLAY:
             if ban[1] + 1 == x:
                 occupied.append(ban[0])
         courts = []
-        for _ in range(COURTS_TO_USE):
+        for _ in range(COURTS_TO_USE-LESS_COURTS[x+1]):
             courts.append([])
+        #for _ in range(LESS_COURTS[x+1]):
+         #   courts[_] = ['null', 'null', 'null']
         if x + 1 not in WEEKS_NOT_PLAYABLE:
             fill_in_courts(courts, groups, occupied, groups_info)
         for group_id, group in enumerate(groups):
@@ -527,7 +531,7 @@ def get_score(groups, match_up_score, friendly_count):
 
 def score_history(history):
     """
-    looks at the history of a team and says how badly it does in terms of doing things back to back
+   looks at the history of a team and says how badly it does in terms of doing things back to back
     Used to minimise people playing lots of games back to back without a break and preventing long breaks for bordem
     :param history: For a team what order were the games and referees. example: 'rgfgggrfrgg'
     :return: score of how bad it is
@@ -566,6 +570,32 @@ def main():
     print("There are a total of:", int(away_games), "away matches")
 
 
+if OVERNIGHT_MODE:
+    NUM_OF_SIMULATION += 1000000000  # runs forever
+LESS_COURTS = []  # is the number of courts unavailable in index week
+for i in range(ROUNDS+2):  # +2 cuz i'm too lazy to bother with off by 1 errors
+    count2 = 0
+    for pair2 in VENUES_DATES_NO_PLAY:
+        if pair2[1] == i:
+            count2 += 1
+    LESS_COURTS.append(count2)
+blank_output_matrix = []
+for _ in range(ROUNDS):  # fill blank_output_matrix with free slots
+    all_free = []
+    for _ in VENUES:
+        all_free.append('free')
+        all_free.append('free')
+        all_free.append('free')
+    blank_output_matrix.append(all_free)
+for pair2 in VENUES_DATES_NO_PLAY:
+    venue = VENUES.index(pair2[0])+1
+    round_number = pair2[1]-1
+    if round_number > ROUNDS-1:
+        continue
+    blank_output_matrix[round_number][venue*3] = 'Full'
+    blank_output_matrix[round_number][venue * 3 + 1] = 'Full'
+    blank_output_matrix[round_number][venue * 3 + 2] = 'Full'
+#print(blank_output_matrix)
 NUM_OF_COURTS = len(VENUES)
 total = 0
 for group_ in ORIGINAL_GROUPS:
@@ -574,6 +604,6 @@ COURTS_TO_USE = min(NUM_OF_COURTS, total)
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 # debugging is easier if the randomness is not really random.
-random.seed(10)
+# random.seed(10)
 if __name__ == "__main__":
     main()
