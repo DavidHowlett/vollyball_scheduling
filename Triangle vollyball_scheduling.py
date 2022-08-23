@@ -283,7 +283,7 @@ def home_games(output_matrix):
                 thing1[i] = 'free'
     for team in homesickness:
         if homesickness[team] > 0:
-            matchup_penalty += homesickness[team] + (1 + homesickness[team] / 10)
+            matchup_penalty += homesickness[team] * (1 + homesickness[team] / 10)
     return new_output_matrix, away_games, total_games, matchup_penalty
 
 
@@ -355,8 +355,6 @@ def run_sim(groups):
         courts = []
         for _ in range(COURTS_TO_USE-LESS_COURTS[x+1]):
             courts.append([])
-        #for _ in range(LESS_COURTS[x+1]):
-         #   courts[_] = ['null', 'null', 'null']
         if x + 1 not in WEEKS_NOT_PLAYABLE:
             fill_in_courts(courts, groups, occupied, groups_info)
         for group_id, group in enumerate(groups):
@@ -445,11 +443,11 @@ def fill_in_courts(courts, groups, occupied, groups_info):
                                 opponents_dict[team] += 1
                             else:
                                 opponents_dict[team] = 1
-                        max = 0
+                        max_val = 0
                         best_team = "error"  # to be overwritten
                         for team in opponents_dict:
-                            if opponents_dict[team] > max:
-                                max = opponents_dict[team]
+                            if opponents_dict[team] > max_val:
+                                max_val = opponents_dict[team]
                                 best_team = team
                         for team in group:
                             if team.id == best_team:
@@ -573,10 +571,10 @@ def main():
 if OVERNIGHT_MODE:
     NUM_OF_SIMULATION += 1000000000  # runs forever
 LESS_COURTS = []  # is the number of courts unavailable in index week
-for i in range(ROUNDS+2):  # +2 cuz i'm too lazy to bother with off by 1 errors
+for not_i in range(ROUNDS+2):  # +2 cuz i'm too lazy to bother with off by 1 errors
     count2 = 0
     for pair2 in VENUES_DATES_NO_PLAY:
-        if pair2[1] == i:
+        if pair2[1] == not_i:
             count2 += 1
     LESS_COURTS.append(count2)
 blank_output_matrix = []
@@ -595,7 +593,7 @@ for pair2 in VENUES_DATES_NO_PLAY:
     blank_output_matrix[round_number][venue*3] = 'Full'
     blank_output_matrix[round_number][venue * 3 + 1] = 'Full'
     blank_output_matrix[round_number][venue * 3 + 2] = 'Full'
-#print(blank_output_matrix)
+# print(blank_output_matrix)
 NUM_OF_COURTS = len(VENUES)
 total = 0
 for group_ in ORIGINAL_GROUPS:
