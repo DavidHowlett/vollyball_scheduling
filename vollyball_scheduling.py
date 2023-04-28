@@ -37,14 +37,19 @@ ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 NUM_OF_SIMULATION: int = 500  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 12  # number of rounds of games, redundant in olympic_mode
 NUM_OF_COURTS = 6
-COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // 3)
 # olympic_mode forces everyone in a group to play everyone else in the group the same amount. By group_repeats
 # This normally results in teams playing very different numbers of games and unused courts.
 # You also need to pick the group_repeats to give similar numbers to what you want, so generally set to False
-olympic_mode = False
+olympic_mode = False  # True False
+referees_needed = False  # True False
 # olympic_mode = True
 group_repeats = [1, 2, 2, 1]  # For each group, how many times must each team pairing happen. Only for olympic mode
 
+if referees_needed:
+    teams_per_court = 3
+else:
+    teams_per_court = 2
+COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // teams_per_court)
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 if olympic_mode:
     assert len(ORIGINAL_GROUPS) == len(group_repeats), "Number of groups doesn't match how many group repeats"
@@ -110,11 +115,13 @@ def print_table(output_matrix):
     """
     This prints the transpose of the table in the code
     """
-    for i in range(COURTS_TO_USE * 3):
+    for i in range(COURTS_TO_USE * teams_per_court):
         to_output = ""
         for j in range(len(output_matrix)):
             to_output = to_output + "\t\t" + output_matrix[j][i]
         print(to_output[2:])
+        if i % 2 == 1 and not referees_needed:
+            print()
 
 
 def run_sims(groups):
@@ -162,7 +169,8 @@ def run_sim(groups):
                 break
         courts, occupied = one_court_per_group(groups)
         fill_in_missing_players(courts, groups, occupied)
-        match_up_score += add_referees(courts, groups, occupied)
+        if referees_needed:
+            match_up_score += add_referees(courts, groups, occupied)
         for group in groups:
             for team in group:
                 if len(team.history) <= x:
@@ -194,7 +202,10 @@ def one_court_per_group(groups: List[List[TeamStats]]):
                 continue
             else:
                 group[j].refresh_eligible()
-        courts[court_id] = [group[j].id, group[j].eligible_opponents[0], court_id]
+        if referees_needed:
+            courts[court_id] = [group[j].id, group[j].eligible_opponents[0], court_id]
+        else:
+            courts[court_id] = [group[j].id, group[j].eligible_opponents[0]]
         # update team information so that the teams don't repeat.
         occupied.append(group[j].id)
         occupied.append(group[j].eligible_opponents[0])
@@ -243,11 +254,18 @@ def fill_in_missing_players(courts, groups, occupied):
                         if team2.id in occupied:
                             continue
                         # a game shall be played between team and team2
-                        courts[court_id] = [
-                            team.id,
-                            team2.id,
-                            group_no,
-                        ]
+                        if referees_needed:
+                            courts[court_id] = [
+                                team.id,
+                                team2.id,
+                                group_no
+                            ]
+                        else:
+
+                            courts[court_id] = [
+                                team.id,
+                                team2.id
+                            ]
                         occupied.append(team2.id)
                         occupied.append(team.id)
                         team.play(team2.id)
