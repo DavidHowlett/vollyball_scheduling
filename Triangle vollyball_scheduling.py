@@ -27,7 +27,7 @@ ORIGINAL_GROUPS = [["OXM1", "SPM1", "BSM1", "MHM1", "OXM2", "FBM1", "RAM1", "SPM
                    ["OXL1", "FBL1", "BSL1", "MHL1", "SPL1", "NBL1", "OXL2", "SBL1", "OUL1", "RAL1"],
                    ["BSX1", "FBX1", "MHX1", "SPX1", "MHX2", "RAX1", "OXX1"],
                    ["MVX1", "SPX2", "WEX1", "RAX2", "NBX1", "SPX3"],
-                   ["RAJ1", "MVJ1", "BSJ1", "NBJ1", "RAJ2", "FAJ1", "SBJ1", "BSJ2"]]
+                   ["RAJ1", "MVJ1", "BSJ1", "NBJ1", "RAJ2", "FBJ1", "SBJ1", "BSJ2"]]
 VENUES = ["BS1", "FB1", "MH1", "MV1", "NB1", "OX1", "OU1", "RA1", "SB1", "SP1", "SP2"]
 
 # This enables a team to not play on a selected week. ['TEAM', week]
