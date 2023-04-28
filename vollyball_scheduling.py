@@ -41,7 +41,7 @@ NUM_OF_COURTS = 6
 # This normally results in teams playing very different numbers of games and unused courts.
 # You also need to pick the group_repeats to give similar numbers to what you want, so generally set to False
 olympic_mode = False  # True False
-referees_needed = True  # True False
+referees_needed = False  # True False
 # olympic_mode = True
 group_repeats = [1, 2, 2, 1]  # For each group, how many times must each team pairing happen. Only for olympic mode
 
@@ -120,6 +120,8 @@ def print_table(output_matrix):
         for j in range(len(output_matrix)):
             to_output = to_output + "\t\t" + output_matrix[j][i]
         print(to_output[2:])
+        if i % 2 == 1 and not referees_needed:
+            print()
 
 
 def run_sims(groups):
