@@ -55,7 +55,7 @@ if olympic_mode:
     assert len(ORIGINAL_GROUPS) == len(group_repeats), "Number of groups doesn't match how many group repeats"
     needed_matches = 0
     for x in range(len(group_repeats)):
-        needed_matches += group_repeats[x]*len(ORIGINAL_GROUPS[x])*(len(ORIGINAL_GROUPS[x])-1)/2
+        needed_matches += group_repeats[x] * len(ORIGINAL_GROUPS[x]) * (len(ORIGINAL_GROUPS[x]) - 1) / 2
     ROUNDS = int(needed_matches) + 2
     if min(group_repeats) < 1:
         print("One of the groups won't play until you adjust quantities in 'group_repeats'")
@@ -81,14 +81,14 @@ class TeamStats:
             self.games_played = -len(playable)
         self.games_refereed = 0
         self._backup_opponents = playable.copy()
-        self.history = ''  # g = Game, r = Referee, f = Free. example: 'ggrgfg'
+        self.history = ""  # g = Game, r = Referee, f = Free. example: 'ggrgfg'
 
     def play(self, other: str):
         if other not in self.eligible_opponents:
             self.refresh_eligible()
         self.eligible_opponents.remove(other)
         self.games_played += 1
-        self.history += 'g'
+        self.history += "g"
 
     def refresh_eligible(self):
         self.eligible_opponents.extend(self._backup_opponents)
@@ -174,7 +174,7 @@ def run_sim(groups):
         for group in groups:
             for team in group:
                 if len(team.history) <= x:
-                    team.history += 'f'
+                    team.history += "f"
         to_output = []
         for court in courts:
             to_output.extend(court)
@@ -255,17 +255,10 @@ def fill_in_missing_players(courts, groups, occupied):
                             continue
                         # a game shall be played between team and team2
                         if referees_needed:
-                            courts[court_id] = [
-                                team.id,
-                                team2.id,
-                                group_no
-                            ]
+                            courts[court_id] = [team.id, team2.id, group_no]
                         else:
 
-                            courts[court_id] = [
-                                team.id,
-                                team2.id
-                            ]
+                            courts[court_id] = [team.id, team2.id]
                         occupied.append(team2.id)
                         occupied.append(team.id)
                         team.play(team2.id)
@@ -300,7 +293,7 @@ def add_referees(courts, groups, occupied):
             occupied.append(best_team.id)
             court[2] = best_team.id
             best_team.games_refereed += 1
-            best_team.history += 'r'
+            best_team.history += "r"
         else:  # find one from a different group
             match_up_score += 0.1
             for group in random.sample(groups, len(groups)):
@@ -313,7 +306,7 @@ def add_referees(courts, groups, occupied):
                 occupied.append(best_team.id)
                 court[2] = best_team.id
                 best_team.games_refereed += 1
-                best_team.history += 'r'
+                best_team.history += "r"
             else:
                 # todo: handle case where no referee found
                 raise NotImplementedError
@@ -346,8 +339,8 @@ def score_history(history):
     :param history: For a team what order were the games and referees. example: 'rgfgggrfrgg'
     :return: score of how bad it is
     """
-    weights = {'g': 3, 'r': 0.5, 'f': 2}
-    last = ''
+    weights = {"g": 3, "r": 0.5, "f": 2}
+    last = ""
     total_score = 0
     repetitions = 0
     for x in history:
@@ -357,7 +350,7 @@ def score_history(history):
         else:
             repetitions = 0
         last = x
-    return total_score*0.05
+    return total_score * 0.05
 
 
 def main():
