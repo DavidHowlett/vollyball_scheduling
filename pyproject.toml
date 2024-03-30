@@ -1,3 +1,12 @@
 [tool.black]
 line-length = 120
 target-version = ['py311']
+[isort]
+line-length=120
+multi_line_output=3
+include_trailing_comma=true
+[ruff]
+line-length=120
+[docformatter]
+wrap-summaries = 120
+wrap-descriptions = 120

@@ -64,7 +64,7 @@ if olympic_mode:
 
 
 class EmptyCourtException(Exception):
-    """thrown when the court is unexpectedly empty"""
+    """Thrown when the court is unexpectedly empty."""
 
 
 class TeamStats:
@@ -95,9 +95,7 @@ class TeamStats:
 
 
 def reformat_teams(given_groups, group_repeats):
-    """
-    replace team with TeamStats object
-    """
+    """Replace team with TeamStats object."""
     new_groups = []
     i = 0
     for group in given_groups:
@@ -112,9 +110,7 @@ def reformat_teams(given_groups, group_repeats):
 
 
 def print_table(output_matrix):
-    """
-    This prints the transpose of the table in the code
-    """
+    """This prints the transpose of the table in the code."""
     for i in range(COURTS_TO_USE * teams_per_court):
         to_output = ""
         for j in range(len(output_matrix)):
@@ -125,10 +121,8 @@ def print_table(output_matrix):
 
 
 def run_sims(groups):
-    """
-    generate a collection of solutions with a bit of randomness and return the best one,
-    the best score and the average score
-    """
+    """Generate a collection of solutions with a bit of randomness and return the best
+    one, the best score and the average score."""
     best_output_matrix = []
     best_match_up_score = 999999  # This will be overridden later
     average_match_up_score = 0
@@ -150,9 +144,7 @@ def run_sims(groups):
 
 
 def run_sim(groups):
-    """
-    generate a single solution and partially scores it
-    """
+    """Generate a single solution and partially scores it."""
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups, group_repeats)
@@ -183,9 +175,8 @@ def run_sim(groups):
 
 
 def one_court_per_group(groups: List[List[TeamStats]]):
-    """
-    This fills in 1 court per group to help balance the number of courts allocated to each group
-    """
+    """This fills in 1 court per group to help balance the number of courts allocated to
+    each group."""
     # courts: List[List] = [[]] * COURTS_TO_USE  # crashes code in olympic_mode due to mutable lists *angry face*
     courts = []
     for _ in range(COURTS_TO_USE):
@@ -219,9 +210,7 @@ def one_court_per_group(groups: List[List[TeamStats]]):
 
 
 def fill_in_missing_players(courts, groups, occupied):
-    """
-    fills in players for the remaining courts with some randomness
-    """
+    """Fills in players for the remaining courts with some randomness."""
     for court_id, court in enumerate(courts):
         if court:
             # Court already filled
@@ -268,9 +257,7 @@ def fill_in_missing_players(courts, groups, occupied):
 
 
 def add_referees(courts, groups, occupied):
-    """
-    Add referees to all the matches
-    """
+    """Add referees to all the matches."""
     match_up_score = 0  # how bad the setup of matches is
     for court in courts:
         if not court:
@@ -314,10 +301,8 @@ def add_referees(courts, groups, occupied):
 
 
 def get_score(groups, match_up_score):
-    """
-    given a partially calculated score, and the datastructure describing the solution,
-    calculate the final score
-    """
+    """Given a partially calculated score, and the datastructure describing the
+    solution, calculate the final score."""
     min_games = min(team.games_played for group in groups for team in group)
     max_games = max(team.games_played for group in groups for team in group)
     for group in groups:
@@ -333,10 +318,12 @@ def get_score(groups, match_up_score):
 
 
 def score_history(history):
-    """
-    looks at the history of a team and says how badly it does in terms of doing things back to back
-    Used to minimise people playing lots of games back to back without a break and preventing long breaks for bordem
-    :param history: For a team what order were the games and referees. example: 'rgfgggrfrgg'
+    """Looks at the history of a team and says how badly it does in terms of doing
+    things back to back Used to minimise people playing lots of games back to back
+    without a break and preventing long breaks for bordem :param history: For a team
+    what order were the games and referees.
+
+    example: 'rgfgggrfrgg'
     :return: score of how bad it is
     """
     weights = {"g": 3, "r": 0.5, "f": 2}
@@ -354,9 +341,7 @@ def score_history(history):
 
 
 def main():
-    """
-    Run the simulation and print the results
-    """
+    """Run the simulation and print the results."""
     best_output_matrix, average_match_up_score, best_match_up_score = run_sims(ORIGINAL_GROUPS)
     print_table(best_output_matrix)
     print(

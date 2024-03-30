@@ -1,9 +1,10 @@
-"""
-Andrew Tatarek asked me to help organize a volleyball tournament. Given a set of groups of teams called ORIGINAL_GROUPS
-I need to assign which 3 teams will play each other for each court for each round.
+"""Andrew Tatarek asked me to help organize a volleyball tournament. Given a set of
+groups of teams called ORIGINAL_GROUPS I need to assign which 3 teams will play each
+other for each court for each round.
 
-The code in this file was written Michael Howlett building on code written by Michael, Robert, and David Howlett.
-To enable easy deployment, we put all the logic in a single file so that it can be pasted into
+The code in this file was written Michael Howlett building on code written by Michael,
+Robert, and David Howlett. To enable easy deployment, we put all the logic in a single
+file so that it can be pasted into
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 so that users don't need to install python and deal with the issues associated with that.
 """
@@ -159,9 +160,7 @@ class TeamStats:
 
 
 def reformat_teams(given_groups):
-    """
-    replace team with TeamStats object
-    """
+    """Replace team with TeamStats object."""
     new_groups = []
     i = 0
     for group in given_groups:
@@ -172,9 +171,7 @@ def reformat_teams(given_groups):
 
 
 def print_table(output_matrix):
-    """
-    This prints the transpose of the table in the code
-    """
+    """This prints the transpose of the table in the code."""
     for i in range(COURTS_TO_USE * 3):
         to_output = ""
         for j in range(len(output_matrix)):
@@ -186,9 +183,10 @@ def print_table(output_matrix):
 
 
 def extra_occupied(groups, team):
-    """
-    finds all the other teams that cant play as a result of team being occupied.
-    This is to prevent clashes caused by a player being in both men/women and mixed/juniors
+    """Finds all the other teams that cant play as a result of team being occupied.
+
+    This is to prevent clashes caused by a player being in both men/women and
+    mixed/juniors
     """
     exclude = ""
     occupied_teams = [team.id]
@@ -228,10 +226,10 @@ def print_friendlies(friendlies):
 
 
 def remove_friendlies(groups, output_matrix, groups_info):
-    """
-    looks though the games and tries to remove triangles which are all friendlies.
-    Does a systematic sweep from the end (so blanks are at end)
-    TODO?: add randomness then loop through several times and pick best result
+    """Looks though the games and tries to remove triangles which are all friendlies.
+
+    Does a systematic sweep from the end (so blanks are at end) TODO?: add randomness
+    then loop through several times and pick best result
     """
     rounds = len(output_matrix)
     for round in range(rounds):
@@ -390,10 +388,8 @@ def home_games(output_matrix):
 
 
 def run_sims(groups):
-    """
-    generate a collection of solutions with a bit of randomness and return the best one,
-    the best score and the average score
-    """
+    """Generate a collection of solutions with a bit of randomness and return the best
+    one, the best score and the average score."""
     best_output_matrix = []
     best_match_up_score = 999999  # This will be overridden later
     best_friendlies = []
@@ -441,9 +437,7 @@ def run_sims(groups):
 
 
 def run_sim(groups):
-    """
-    generate a single solution and partially scores it
-    """
+    """Generate a single solution and partially scores it."""
     output_matrix = []
     # at this point in the calculation the number format of groups is changed
     groups = reformat_teams(groups)
@@ -486,9 +480,7 @@ def run_sim(groups):
 
 
 def fill_in_courts(courts, groups, occupied, groups_info):
-    """
-    fills in players for all courts with some randomness
-    """
+    """Fills in players for all courts with some randomness."""
     # find team with the least games
     least = min(team.games_played for group in groups for team in group)
     desperation = 0  # how desperate you are to find a match
@@ -599,10 +591,8 @@ def fill_in_courts(courts, groups, occupied, groups_info):
 
 
 def find_friendlies(groups):
-    """
-    could be made more efficient by using groups_info, but I can't be bothered
-    :return: list of matches that are friendly and not ranked along with the count
-    """
+    """Could be made more efficient by using groups_info, but I can't be bothered
+    :return: list of matches that are friendly and not ranked along with the count."""
     friendlies = []
     friendly_count = 0
     for group in groups:
@@ -623,10 +613,8 @@ def find_friendlies(groups):
 
 
 def get_score(groups, match_up_score, friendly_count):
-    """
-    given a partially calculated score, and the data structure describing the solution,
-    calculate the final score
-    """
+    """Given a partially calculated score, and the data structure describing the
+    solution, calculate the final score."""
     match_up_score += friendly_count * 2
     min_games = min(team.games_played for group in groups for team in group)
     max_games = max(team.games_played for group in groups for team in group)
@@ -642,11 +630,13 @@ def get_score(groups, match_up_score, friendly_count):
 
 
 def score_history(history):
-    """
-    looks at the history of a team and says how badly it does in terms of doing things back to back
-     Used to minimise people playing lots of games back to back without a break and preventing long breaks for bordem
-     :param history: For a team what order were the games and referees. example: 'rgfgggrfrgg'
-     :return: score of how bad it is
+    """Looks at the history of a team and says how badly it does in terms of doing
+    things back to back Used to minimise people playing lots of games back to back
+    without a break and preventing long breaks for bordem :param history: For a team
+    what order were the games and referees.
+
+    example: 'rgfgggrfrgg'
+    :return: score of how bad it is
     """
     weights = {"g": 3, "f": 2}
     last = ""
@@ -663,9 +653,7 @@ def score_history(history):
 
 
 def main():
-    """
-    Run the simulation and print the results
-    """
+    """Run the simulation and print the results."""
     output_matrix, average_match_up_score, match_up_score, friendlies, friendly_count, info, total_games, away_games = (
         run_sims(ORIGINAL_GROUPS)
     )
