@@ -1,27 +1,17 @@
 repos:
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.2.1
+    rev: 5.13.2
     hooks:
       - id: isort
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 24.3.0
     hooks:
     - id: black
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.3
+  - repo: https://github.com/pycqa/pylint
+    rev: "v3.1.0"
     hooks:
-    - id: flake8
-      additional_dependencies: [
-        'flake8-bugbear==20.1.4',
-      ]
-  #- repo: https://github.com/pycqa/pylint
-  #  rev: "pylint-2.5.3"
-  #  hooks:
-  #  - id: pylint
-  #    args:
-  #    # outside of docker we have no guarantee that dependencies are installed
-  #    - --disable=import-error
+    - id: pylint
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: ''  # Use the sha / tag you want to point at
+    rev: 'v1.9.0'  # Use the sha / tag you want to point at
     hooks:
     -   id: mypy
