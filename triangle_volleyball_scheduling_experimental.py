@@ -168,11 +168,9 @@ class TeamStats:
 def reformat_teams(given_groups):
     """Replace team with TeamStats object."""
     new_groups = []
-    i = 0
     for group in given_groups:
         new_group = [TeamStats(name=team, group=group, qty=1) for team in group]
         new_groups.append(new_group)
-        i += 1
     return new_groups
 
 
@@ -211,17 +209,17 @@ def extra_occupied(groups, team, league):
     team_type = team[2]
     #  including both upper and lower case as I don't trust end users.
     #  if statements can be more compact using a dict, but this is easier if non-programmer needs to change it
-    if team_type == "M" or team_type == "m":  # Mens
+    if team_type in ["M", "m"]:  # Mens
         exclude = "JjXx"  # juniors and mixed
-    if team_type == "L" or team_type == "l":  # ladies
+    if team_type in ["L", "l"]:  # ladies
         exclude = "JjXx"  # juniors and mixed
-    if team_type == "J" or team_type == "j":  # juniors
+    if team_type in ["J", "j"]:  # juniors
         exclude = "MmLl"  # Mens and Ladies
-    if team_type == "X" or team_type == "x":  # miXed
+    if team_type in ["X", "x"]:  # miXed
         exclude = "MmLl"  # Mens and Ladies
-    if team_type == "S" or team_type == "s":  # Single, don't exclude anyone
+    if team_type in ["S", "s"]:  # Single, don't exclude anyone
         exclude = " "  # empty
-    if exclude == "":
+    if not exclude:
         print(team, " doesn't follow correct formatting and is of unknown type")
         print(
             "The type read is currently: ",
@@ -229,15 +227,15 @@ def extra_occupied(groups, team, league):
             "  but needs to be one of M (mens), L (ladies), J (juniors), X (mixed), S (single)",
         )
         exit()
-    team_loc = team[0:1]  # where the team is based
+    team_loc = team[:1]
     if league == "all":
         for group in groups:
             for team2 in group:
-                if team2.id[0:1] == team_loc and team2.id[2] in exclude:
+                if team2.id[:1] == team_loc and team2.id[2] in exclude:
                     occupied_teams.append(team2.id)
     else:
         for team2 in league:
-            if team2.id[0:1] == team_loc and team2.id[2] in exclude:
+            if team2.id[:1] == team_loc and team2.id[2] in exclude:
                 occupied_teams.append(team2.id)
     return occupied_teams
 
@@ -443,7 +441,7 @@ def run_sims(groups):
             best_away_games = away_games
             best_re_groups = result_groups
             if OVERNIGHT_MODE:
-                print_table(output_matrix)
+                print_table(best_output_matrix)
                 print_friendlies(friendlies)
                 print("Current best score is: ", -best_match_up_score)
                 print("Current number of friendlies is: ", best_friendly_count)
@@ -477,13 +475,8 @@ def run_sim(groups):
                 pairings.append([team1.id, team2.id])
         groups_info.append({0: pairings, 1: []})  # each pairing has been played 0 times.
     for x in range(ROUNDS):
-        occupied = []
-        for ban in TEAMS_DATES_NO_PLAY:
-            if ban[1] + 1 == x:
-                occupied.append(ban[0])
-        courts = []
-        for _ in range(COURTS_TO_USE - LESS_COURTS[x + 1]):
-            courts.append([])
+        occupied = [ban[0] for ban in TEAMS_DATES_NO_PLAY if ban[1] + 1 == x]
+        courts = [[] for _ in range(COURTS_TO_USE - LESS_COURTS[x + 1])]
         if x + 1 not in WEEKS_NOT_PLAYABLE:
             fill_in_courts(courts, groups, occupied, groups_info)
         for group_id, group in enumerate(groups):
@@ -555,14 +548,13 @@ def fill_in_courts(courts, groups, occupied, groups_info):
                         if team1.games_played + team2.games_played >= (least * 2) + desperation:
                             continue  # look for teams who have played less games
                         opponents = team1.eligible_opponents + team2.eligible_opponents
-                        to_remove = []
-                        for team in opponents:
-                            if team in occupied:
-                                to_remove += [team]
-                            elif team == team1.id:
-                                to_remove += [team]
-                            elif team == team2.id:
-                                to_remove += [team]
+                        to_remove = [
+                            team
+                            for team in opponents
+                            if team in occupied
+                            or team == team1.id
+                            or team == team2.id
+                        ]
                         for team in to_remove:
                             opponents.remove(team)
                         if not opponents:
@@ -575,8 +567,8 @@ def fill_in_courts(courts, groups, occupied, groups_info):
                                 opponents_dict[team] = 1
                         max_val = 0
                         best_team = "error"  # to be overwritten
-                        for team in opponents_dict:
-                            if opponents_dict[team] > max_val:
+                        for team, value in opponents_dict.items():
+                            if value > max_val:
                                 max_val = opponents_dict[team]
                                 best_team = team
                         for team in group:
@@ -689,8 +681,7 @@ def add_league(output_matrix, re_groups, league_number, groups_info):
     always_occupied = []
     for group in re_groups:
         if group != league:
-            for team in group:
-                always_occupied.append(team.id)
+            always_occupied.extend(team.id for team in group)
     for i in range(ROUNDS):
         if i + 1 in WEEKS_NOT_PLAYABLE:
             continue
@@ -705,9 +696,7 @@ def add_league(output_matrix, re_groups, league_number, groups_info):
             else:
                 empty_courts += 1.001  # if +1, then when divided by 3, risk of 0.999999 rounding down.
         empty_courts = int(empty_courts / 3)
-        courts = []
-        for j in range(empty_courts - LESS_COURTS[i + 1]):
-            courts.append([])
+        courts = [[] for _ in range(empty_courts - LESS_COURTS[i + 1])]
         fill_in_courts(courts, re_groups, occupied, groups_info)
         for court in courts:
             if court != []:
@@ -733,8 +722,7 @@ def remove_league(output_matrix, groups, league_number, info, re_groups):
     reset_group = info[league_number]
     all_pairs = []
     for index in reset_group:
-        for pair in reset_group[index]:
-            all_pairs.append(pair)
+        all_pairs.extend(iter(reset_group[index]))
     info[league_number] = {0: all_pairs, 1: []}
     for team in re_groups[league_number]:
         team.history = ""
@@ -778,7 +766,7 @@ def find_friendlies(groups_info):
                     started = True
                     formal_rounds = i
                 else:
-                    for j in range(i - formal_rounds):
+                    for _ in range(i - formal_rounds):
                         for pair in group_info[i]:
                             friendlies.append(pair)
                             friendly_count += 1
@@ -848,9 +836,9 @@ def main():
     print_table(output_matrix)
     print_friendlies(friendlies)
     print(
-        str(round(-match_up_score, 2)),
+        round(-match_up_score, 2),
         "best score compared to average of :",
-        str(round(-average_match_up_score, 2)),
+        round(-average_match_up_score, 2),
     )
     print("There are a total of:", int(total_games), "matches")
     print("There are a total of:", int(friendly_count), "friendly matches")
@@ -862,18 +850,14 @@ if OVERNIGHT_MODE:
     NUM_OF_SIMULATION += 1000000000  # runs forever
 LESS_COURTS = []  # is the number of courts unavailable in index week
 for not_i in range(ROUNDS + 2):  # +2 cuz i'm too lazy to bother with off by 1 errors
-    count2 = 0
-    for pair2 in VENUES_DATES_NO_PLAY:
-        if pair2[1] == not_i:
-            count2 += 1
+    count2 = sum(bool(pair2[1] == not_i)
+             for pair2 in VENUES_DATES_NO_PLAY)
     LESS_COURTS.append(count2)
 blank_output_matrix = []
 for _ in range(ROUNDS):  # fill blank_output_matrix with free slots
     all_free = []
     for _ in VENUES:
-        all_free.append("free")
-        all_free.append("free")
-        all_free.append("free")
+        all_free.extend(("free", "free", "free"))
     blank_output_matrix.append(all_free)
 for pair2 in VENUES_DATES_NO_PLAY:
     venue = VENUES.index(pair2[0]) + 1
@@ -885,9 +869,7 @@ for pair2 in VENUES_DATES_NO_PLAY:
     blank_output_matrix[round_number][venue * 3 + 2] = "Full"
 # print(blank_output_matrix)
 NUM_OF_COURTS = len(VENUES)
-total = 0
-for group_ in ORIGINAL_GROUPS:
-    total += int(len(group_) / 3)
+total = sum(len(group_) // 3 for group_ in ORIGINAL_GROUPS)
 COURTS_TO_USE = min(NUM_OF_COURTS, total)
 ALL_TEAMS = [team for group in ORIGINAL_GROUPS for team in group]
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
