@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Andrew Tatarek asked me to help organize a volleyball tournament. Given a set of groups of teams called ORIGINAL_GROUPS
 I need to assign which team will play which when and which team will referee. This is part of a larger solution that
@@ -17,6 +18,7 @@ To enable easy deployment we put all the logic in a single file so that it can b
 https://www.w3schools.com/python/trypython.asp?filename=demo_ref_min
 for easy deployment.
 """
+
 
 import copy
 import random
@@ -45,22 +47,18 @@ referees_needed = False  # True False
 # olympic_mode = True
 group_repeats = [1, 2, 2, 1]  # For each group, how many times must each team pairing happen. Only for olympic mode
 
-if referees_needed:
-    teams_per_court = 3
-else:
-    teams_per_court = 2
+teams_per_court = 3 if referees_needed else 2
 COURTS_TO_USE = min(NUM_OF_COURTS, len(ALL_TEAMS) // teams_per_court)
 assert len(ALL_TEAMS) == len(set(ALL_TEAMS)), "Duplicate team, or team in >1 group!"
 if olympic_mode:
     assert len(ORIGINAL_GROUPS) == len(group_repeats), "Number of groups doesn't match how many group repeats"
-    needed_matches = 0
-    for x in range(len(group_repeats)):
-        needed_matches += group_repeats[x] * len(ORIGINAL_GROUPS[x]) * (len(ORIGINAL_GROUPS[x]) - 1) / 2
+    needed_matches = sum(
+        group_repeats[x] * len(ORIGINAL_GROUPS[x]) * (len(ORIGINAL_GROUPS[x]) - 1) / 2
+        for x in range(len(group_repeats))
+    )
     ROUNDS = int(needed_matches) + 2
     if min(group_repeats) < 1:
         print("One of the groups won't play until you adjust quantities in 'group_repeats'")
-# debugging is easier if the randomness is not really random.
-# random.seed(10)
 
 
 class EmptyCourtException(Exception):
@@ -97,15 +95,10 @@ class TeamStats:
 def reformat_teams(given_groups, group_repeats):
     """Replace team with TeamStats object."""
     new_groups = []
-    i = 0
-    for group in given_groups:
-        if olympic_mode:
-            qty = int(group_repeats[i])
-        else:
-            qty = 1
+    for i, group in enumerate(given_groups):
+        qty = int(group_repeats[i]) if olympic_mode else 1
         new_group = [TeamStats(name=team, group=group, qty=qty) for team in group]
         new_groups.append(new_group)
-        i += 1
     return new_groups
 
 
@@ -177,10 +170,7 @@ def run_sim(groups):
 def one_court_per_group(groups: List[List[TeamStats]]):
     """This fills in 1 court per group to help balance the number of courts allocated to
     each group."""
-    # courts: List[List] = [[]] * COURTS_TO_USE  # crashes code in olympic_mode due to mutable lists *angry face*
-    courts = []
-    for _ in range(COURTS_TO_USE):
-        courts.append([])
+    courts = [[] for _ in range(COURTS_TO_USE)]
     occupied = []  # teams which are busy.
     for court_id, group in enumerate(groups):
         i, j = 9999, 0
@@ -197,9 +187,7 @@ def one_court_per_group(groups: List[List[TeamStats]]):
             courts[court_id] = [group[j].id, group[j].eligible_opponents[0], court_id]
         else:
             courts[court_id] = [group[j].id, group[j].eligible_opponents[0]]
-        # update team information so that the teams don't repeat.
-        occupied.append(group[j].id)
-        occupied.append(group[j].eligible_opponents[0])
+        occupied.extend((group[j].id, group[j].eligible_opponents[0]))
         # update team 2 info
         for team in group:
             if team.id == group[j].eligible_opponents[0]:
@@ -272,10 +260,9 @@ def add_referees(courts, groups, occupied):
         min_refs = 9999  # minimum number of games refereed by a team in the group
         best_team = None  # team with the least referees
         for team in group:  # try to find a ref from the same group
-            if team.id not in occupied:
-                if team.games_refereed < min_refs:
-                    min_refs = team.games_refereed
-                    best_team = team
+            if team.id not in occupied and team.games_refereed < min_refs:
+                min_refs = team.games_refereed
+                best_team = team
         if best_team is not None:
             occupied.append(best_team.id)
             court[2] = best_team.id
@@ -285,10 +272,9 @@ def add_referees(courts, groups, occupied):
             match_up_score += 0.1
             for group in random.sample(groups, len(groups)):
                 for team in group:
-                    if team.id not in occupied:
-                        if team.games_refereed < min_refs:
-                            min_refs = team.games_refereed
-                            best_team = team
+                    if team.id not in occupied and team.games_refereed < min_refs:
+                        min_refs = team.games_refereed
+                        best_team = team
             if best_team is not None:
                 occupied.append(best_team.id)
                 court[2] = best_team.id

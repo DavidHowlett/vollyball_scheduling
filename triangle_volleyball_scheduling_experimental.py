@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Andrew Tatarek asked me to help organize a volleyball tournament. Given a set of
 groups of teams called ORIGINAL_GROUPS I need to assign which 3 teams will play each
 other for each court for each round.
@@ -549,11 +550,7 @@ def fill_in_courts(courts, groups, occupied, groups_info):
                             continue  # look for teams who have played less games
                         opponents = team1.eligible_opponents + team2.eligible_opponents
                         to_remove = [
-                            team
-                            for team in opponents
-                            if team in occupied
-                            or team == team1.id
-                            or team == team2.id
+                            team for team in opponents if team in occupied or team == team1.id or team == team2.id
                         ]
                         for team in to_remove:
                             opponents.remove(team)
@@ -850,8 +847,7 @@ if OVERNIGHT_MODE:
     NUM_OF_SIMULATION += 1000000000  # runs forever
 LESS_COURTS = []  # is the number of courts unavailable in index week
 for not_i in range(ROUNDS + 2):  # +2 cuz i'm too lazy to bother with off by 1 errors
-    count2 = sum(bool(pair2[1] == not_i)
-             for pair2 in VENUES_DATES_NO_PLAY)
+    count2 = sum(bool(pair2[1] == not_i) for pair2 in VENUES_DATES_NO_PLAY)
     LESS_COURTS.append(count2)
 blank_output_matrix = []
 for _ in range(ROUNDS):  # fill blank_output_matrix with free slots
