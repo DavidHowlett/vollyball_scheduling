@@ -6,7 +6,8 @@ Excel.
 """
 
 
-# This is a dictionary of the leagues. It maps the leagues to the other leagues that can't be scheduled at the same time.
+# This is a dictionary of the leagues.
+# It maps the leagues to the other leagues that can't be scheduled at the same time.
 league_exclusions = """
 mens1	mixed
 mens2	mixed
