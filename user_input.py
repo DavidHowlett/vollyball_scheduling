@@ -21,55 +21,55 @@ juniors
 # second column is the team name
 # third column is the league
 teams = """
-BSJ1	Basingstoke Lynx	J1
-BSJ2	Basingstoke Hornets	J1
-BSL1	Basingstoke Lionesses	L1
-BSM1	Basingstoke Lions	M1
-BSM2	Basingstoke Jaguars	M2
-BSX1	Basingstoke Tigers	X1
-FBJ1	Farnborough Wolves	J1
-FBL1	Farnborough Pheonix	L1
-FBM1	Farnborough Vipers	M1
-FBM2	Farnborough Hawks	M2
-FBX1	Farnborough Panthers	X1
-MHL1	Maidenhead Braywick	L1
-MHM1	Maidenhead Braywick	M1
-MHM2	Maidenhead Magnet	M2
-MHX1	Maidenhead Braywick	X1
-MHX2	Maidenhead Magnet	X1
-MVJ1	Maverick Juniors	J1
-MVX	Maverick Mixed	X2
-NBJ1	Newbury Juniors	J1
-NBL1	Newbury Ladies	L1
-NBM1	Newbury Mens	M2
-NBM2	Newbury Juniors	M2
-NBX1	Newbury Mixed	X2
-OUL1	Oxford Uni Ladies	L1
-OUM1	Oxford Uni Men	M2
-OXL1	Oxford Falcons	L1
-OXL2	Oxford Flamingoes	L1
-OXM1	Oxford Vollox	M1
-OXM2	Oxford Bulls	M1
-OXM3	Oxford Bullox	M1
-OXX1	Oxford Globetrotters	X1
-RAJ1	Reading Aces Juniors A	J1
-RAJ2	Reading Aces Juniors B	J1
-RAL1	Reading Aces Ladies	L1
-RAM1	Reading Aces Mens 1	M1
-RAM2	Reading Aces Mens 2	M2
-RAM3	Reading Aces Mens 3	M2
-RAX1	Reading Aces Mixed 1	X1
-RAX2	Reading Aces Mixed 2	X2
-SBJ1	South Bucks Juniors	J1
-SBL1	South Bucks Ladies	L1
-SPL1	Spikeopaths Ladies	L1
-SPM1	Spikeopaths Mens 1	M1
-SPM2	Spikeopaths Mens 2	M1
-SPX1	Spikeopaths Mixed 1	X1
-SPX2	Spikeopaths Mixed 2	X2
-SPX3	Spikeopaths Mixed 3	X2
-WEM1	Wycombe Eagles	M2
-WEX1	Wycombe Eagles	X2
+BSJ1	Basingstoke Lynx	J1	Basingstoke
+BSJ2	Basingstoke Hornets	J1	Basingstoke
+BSL1	Basingstoke Lionesses	L1	Basingstoke
+BSM1	Basingstoke Lions	M1	Basingstoke
+BSM2	Basingstoke Jaguars	M2	Basingstoke
+BSX1	Basingstoke Tigers	X1	Basingstoke
+FBJ1	Farnborough Wolves	J1	Farnborough
+FBL1	Farnborough Pheonix	L1	Farnborough
+FBM1	Farnborough Vipers	M1	Farnborough
+FBM2	Farnborough Hawks	M2	Farnborough
+FBX1	Farnborough Panthers	X1	Farnborough
+MHL1	Maidenhead Braywick	L1	Maidenhead
+MHM1	Maidenhead Braywick	M1	Maidenhead
+MHM2	Maidenhead Magnet	M2	Maidenhead
+MHX1	Maidenhead Braywick	X1	Maidenhead
+MHX2	Maidenhead Magnet	X1	Maidenhead
+MVJ1	Maverick Juniors	J1	Maverick
+MVX	Maverick Mixed	X2	Maverick
+NBJ1	Newbury Juniors	J1	Newbury
+NBL1	Newbury Ladies	L1	Newbury
+NBM1	Newbury Mens	M2	Newbury
+NBM2	Newbury Juniors	M2	Newbury
+NBX1	Newbury Mixed	X2	Newbury
+OUL1	Oxford Uni Ladies	L1	Oxford Uni
+OUM1	Oxford Uni Men	M2	Oxford Uni
+OXL1	Oxford Falcons	L1	Oxford
+OXL2	Oxford Flamingoes	L1	Oxford
+OXM1	Oxford Vollox	M1	Oxford
+OXM2	Oxford Bulls	M1	Oxford
+OXM3	Oxford Bullox	M1	Oxford
+OXX1	Oxford Globetrotters	X1	Oxford
+RAJ1	Reading Aces Juniors A	J1	Reading Aces
+RAJ2	Reading Aces Juniors B	J1	Reading Aces
+RAL1	Reading Aces Ladies	L1	Reading Aces
+RAM1	Reading Aces Mens 1	M1	Reading Aces
+RAM2	Reading Aces Mens 2	M2	Reading Aces
+RAM3	Reading Aces Mens 3	M2	Reading Aces
+RAX1	Reading Aces Mixed 1	X1	Reading Aces
+RAX2	Reading Aces Mixed 2	X2	Reading Aces
+SBJ1	South Bucks Juniors	J1	South Bucks
+SBL1	South Bucks Ladies	L1	South Bucks
+SPL1	Spikeopaths Ladies	L1	Spikeopaths
+SPM1	Spikeopaths Mens 1	M1	Spikeopaths
+SPM2	Spikeopaths Mens 2	M1	Spikeopaths
+SPX1	Spikeopaths Mixed 1	X1	Spikeopaths
+SPX2	Spikeopaths Mixed 2	X2	Spikeopaths
+SPX3	Spikeopaths Mixed 3	X2	Spikeopaths
+WEM1	Wycombe Eagles	M2	Wycombe
+WEX1	Wycombe Eagles	X2	Wycombe
 """
 
 team_unavailability = """

@@ -127,3 +127,4 @@ Outstanding questions
 - Are the team codes (like OXM2) customer facing? I don't want to change things that would annoy teams.
 - How many triangles can be scheduled at one venue in one weekend?
 - Can a club have more than one team in a single league?
+  - Yes, the Spikeopaths field two mixed teams

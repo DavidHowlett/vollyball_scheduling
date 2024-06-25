@@ -4,8 +4,7 @@ import volleyball_scheduling2
 
 
 def test_parse_leagues():
-    leagues = volleyball_scheduling2.parse_leagues(
-        """
+    leagues_str = """
 mens1	mixed
 mens2	mixed
 womens1	mixed
@@ -13,7 +12,7 @@ womens2	mixed
 mixed	mens1 mens2 womens1 womans2
 juniors
 """
-    )
+    leagues = volleyball_scheduling2.parse_leagues(leagues_str)
     assert leagues == {
         "mens1": ["mixed"],
         "mens2": ["mixed"],
@@ -26,19 +25,29 @@ juniors
 
 def test_parse_teams():
     teams_str = """
-BSJ1	Basingstoke Lynx	J1
-BSJ2	Basingstoke Hornets	J1
-BSL1	Basingstoke Lionesses	L1
-BSM1	Basingstoke Lions	M1
-BSM2	Basingstoke Jaguars	M2
+BSJ1	Basingstoke Lynx	J1	Basingstoke
+BSJ2	Basingstoke Hornets	J1	Basingstoke
+BSL1	Basingstoke Lionesses	L1	Basingstoke
+BSM1	Basingstoke Lions	M1	Basingstoke
+BSM2	Basingstoke Jaguars	M2	Basingstoke
+RAX1	Reading Aces Mixed 1	X1	Reading Aces
+RAX2	Reading Aces Mixed 2	X2	Reading Aces
+SPX3	Spikeopaths Mixed 3	X2	Spikeopaths
+WEM1	Wycombe Eagles	M2	Wycombe
+WEX1	Wycombe Eagles	X2	Wycombe
 """
     teams = volleyball_scheduling2.parse_teams(teams_str)
     assert teams == {
-        "BSJ1": {"name": "Basingstoke Lynx", "league": "J1"},
-        "BSJ2": {"name": "Basingstoke Hornets", "league": "J1"},
-        "BSL1": {"name": "Basingstoke Lionesses", "league": "L1"},
-        "BSM1": {"name": "Basingstoke Lions", "league": "M1"},
-        "BSM2": {"name": "Basingstoke Jaguars", "league": "M2"},
+        "BSJ1": {"name": "Basingstoke Lynx", "league": "J1", "club": "Basingstoke"},
+        "BSJ2": {"name": "Basingstoke Hornets", "league": "J1", "club": "Basingstoke"},
+        "BSL1": {"name": "Basingstoke Lionesses", "league": "L1", "club": "Basingstoke"},
+        "BSM1": {"name": "Basingstoke Lions", "league": "M1", "club": "Basingstoke"},
+        "BSM2": {"name": "Basingstoke Jaguars", "league": "M2", "club": "Basingstoke"},
+        "RAX1": {"name": "Reading Aces Mixed 1", "league": "X1", "club": "Reading Aces"},
+        "RAX2": {"name": "Reading Aces Mixed 2", "league": "X2", "club": "Reading Aces"},
+        "SPX3": {"name": "Spikeopaths Mixed 3", "league": "X2", "club": "Spikeopaths"},
+        "WEM1": {"name": "Wycombe Eagles", "league": "M2", "club": "Wycombe"},
+        "WEX1": {"name": "Wycombe Eagles", "league": "X2", "club": "Wycombe"},
     }
 
 

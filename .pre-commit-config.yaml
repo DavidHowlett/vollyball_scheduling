@@ -30,6 +30,7 @@ repos:
     rev: v1.7.5
     hooks:
       - id: docformatter
+        # it doesn't seem to pick up the config correctly
         args: [
           --in-place,
           --black,

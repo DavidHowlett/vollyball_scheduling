@@ -23,8 +23,8 @@ def parse_teams(teams_str: str):
     teams_str = teams_str.strip()
     teams = {}
     for line in teams_str.split("\n"):
-        code, name, league = line.split("\t")
-        teams[code] = {"name": name, "league": league}
+        code, name, league, club = line.split("\t")
+        teams[code] = {"name": name, "league": league, "club": club}
     return teams
 
 
