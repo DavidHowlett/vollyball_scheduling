@@ -217,9 +217,7 @@ def extra_occupied(groups, team):
         exit()
     team_loc = team.id[:1]
     for group in groups:
-        for team2 in group:
-            if team2.id[:1] == team_loc and team2.id[2] in exclude:
-                occupied_teams.append(team2.id)
+        occupied_teams.extend(team2.id for team2 in group if team2.id[:1] == team_loc and team2.id[2] in exclude)
     return occupied_teams
 
 
@@ -677,7 +675,7 @@ if OVERNIGHT_MODE:
     NUM_OF_SIMULATION += 1000000000  # runs forever
 LESS_COURTS = []  # is the number of courts unavailable in index week
 for not_i in range(ROUNDS + 2):  # +2 cuz i'm too lazy to bother with off by 1 errors
-    count2 = sum(bool(pair2[1] == not_i) for pair2 in VENUES_DATES_NO_PLAY)
+    count2 = sum(pair2[1] == not_i for pair2 in VENUES_DATES_NO_PLAY)
     LESS_COURTS.append(count2)
 blank_output_matrix = []
 for _ in range(ROUNDS):  # fill blank_output_matrix with free slots
