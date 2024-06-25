@@ -22,7 +22,7 @@ for easy deployment.
 
 import copy
 import random
-from typing import List
+from typing import Any, List
 
 # groups = [
 #     ["teamA1", "teamA2", "teamA3", "teamA4", "teamA5"],
@@ -66,6 +66,8 @@ class EmptyCourtException(Exception):
 
 
 class TeamStats:
+    """Class purpose forgotten."""
+
     def __init__(self, name: str, group: List[str], qty: int):
         self.id = name
         playable = []
@@ -92,11 +94,11 @@ class TeamStats:
         self.eligible_opponents.extend(self._backup_opponents)
 
 
-def reformat_teams(given_groups, group_repeats):
+def reformat_teams(given_groups, local_group_repeats):
     """Replace team with TeamStats object."""
     new_groups = []
     for i, group in enumerate(given_groups):
-        qty = int(group_repeats[i]) if olympic_mode else 1
+        qty = int(local_group_repeats[i]) if olympic_mode else 1
         new_group = [TeamStats(name=team, group=group, qty=qty) for team in group]
         new_groups.append(new_group)
     return new_groups
@@ -170,8 +172,8 @@ def run_sim(groups):
 def one_court_per_group(groups: List[List[TeamStats]]):
     """This fills in 1 court per group to help balance the number of courts allocated to
     each group."""
-    courts = [[] for _ in range(COURTS_TO_USE)]
-    occupied = []  # teams which are busy.
+    courts: List[List[Any]] = [[] for _ in range(COURTS_TO_USE)]
+    occupied: List[str] = []  # teams which are busy.
     for court_id, group in enumerate(groups):
         i, j = 9999, 0
         for k, team in enumerate(group):

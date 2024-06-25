@@ -20,7 +20,7 @@ while true:
 
 import copy
 import random
-from typing import List
+from typing import List, Tuple
 
 ORIGINAL_GROUPS = [
     ["OXM1", "SPM1", "BSM1", "MHM1", "OXM2", "FBM1", "RAM1", "SPM2", "OXM3"],
@@ -96,39 +96,39 @@ TEAMS_DATES_NO_PLAY = [
 #                  ['RAJ2', 3], ['BHJ1', 3], ['OXX1', 3], ['NBX1', 3], ['NBJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['MHX2', 3], ['RAX1', 3], ['OXX1', 3], ['NBX1', 3], ['RAJ1', 3], ['SPJ1', 3], ['BSJ1', 3],
 #                  ['BSX1', 3], ['FBX1', 3], ['MHX1', 3], ['SPX1', 3]]
-VENUES_DATES_NO_PLAY = [
-    ["BS1", 10],
-    ["FB1", 11],
-    ["MV1", 15],
-    ["MV1", 16],
-    ["MV1", 17],
-    ["MV1", 18],
-    ["MV1", 19],
-    ["MV1", 20],
-    ["MV1", 21],
-    ["MV1", 22],
-    ["MV1", 23],
-    ["MV1", 25],
-    ["MV1", 28],
-    ["MV1", 29],
-    ["MV1", 30],
-    ["OX1", 1],
-    ["OX1", 8],
-    ["OX1", 9],
-    ["OX1", 10],
-    ["OX1", 11],
-    ["OX1", 14],
-    ["OX1", 23],
-    ["OX1", 24],
-    ["OX1", 25],
-    ["OX1", 26],
-    ["OX1", 28],
-    ["OU1", 16],
-    ["RA1", 7],
-    ["RA1", 16],
-    ["RA1", 19],
-    ["RA1", 26],
-    ["NB1", 28],
+VENUES_DATES_NO_PLAY: List[Tuple[str, int]] = [
+    ("BS1", 10),
+    ("FB1", 11),
+    ("MV1", 15),
+    ("MV1", 16),
+    ("MV1", 17),
+    ("MV1", 18),
+    ("MV1", 19),
+    ("MV1", 20),
+    ("MV1", 21),
+    ("MV1", 22),
+    ("MV1", 23),
+    ("MV1", 25),
+    ("MV1", 28),
+    ("MV1", 29),
+    ("MV1", 30),
+    ("OX1", 1),
+    ("OX1", 8),
+    ("OX1", 9),
+    ("OX1", 10),
+    ("OX1", 11),
+    ("OX1", 14),
+    ("OX1", 23),
+    ("OX1", 24),
+    ("OX1", 25),
+    ("OX1", 26),
+    ("OX1", 28),
+    ("OU1", 16),
+    ("RA1", 7),
+    ("RA1", 16),
+    ("RA1", 19),
+    ("RA1", 26),
+    ("NB1", 28),
 ]
 NUM_OF_SIMULATION: int = 1  # number of times it tries to produce a setup, higher improves matching but slows program
 ROUNDS = 27
@@ -137,6 +137,11 @@ OVERNIGHT_MODE = False  # if true, when it finds new best, outputs it. Used for 
 
 
 class TeamStats:
+    """Class purpose unknown.
+
+    Docstring for pylint.
+    """
+
     def __init__(self, name: str, group: List[str], qty: int):
         self.id = name
         playable = []
@@ -146,7 +151,7 @@ class TeamStats:
         random.shuffle(playable)
         self.eligible_opponents = playable
         self.games_played = 0
-        self.opponents_played = []
+        self.opponents_played: List[str] = []
         self._backup_opponents = playable.copy()
         self.history = ""  # g = Game, r = Referee, f = Free. example: 'ggrgfg'
 
@@ -253,13 +258,13 @@ def remove_friendlies(groups, output_matrix, groups_info):
     then loop through several times and pick best result
     """
     rounds = len(output_matrix)
-    for round in range(rounds):
-        round += 1
-        for game in range(int(len(output_matrix[rounds - round]) / 3)):
+    for round_from_rounds in range(rounds):
+        round_from_rounds += 1
+        for game in range(int(len(output_matrix[rounds - round_from_rounds]) / 3)):
             game = game * 3
-            team1 = output_matrix[rounds - round][game]
-            team2 = output_matrix[rounds - round][game + 1]
-            team3 = output_matrix[rounds - round][game + 2]
+            team1 = output_matrix[rounds - round_from_rounds][game]
+            team2 = output_matrix[rounds - round_from_rounds][game + 1]
+            team3 = output_matrix[rounds - round_from_rounds][game + 2]
             group_found = False
             group, group_no = 0, 0  # stops pycharm complaining
             if team1 == "free":
@@ -291,9 +296,9 @@ def remove_friendlies(groups, output_matrix, groups_info):
                                 groups_info[group_no][pair_qty].remove(pair)
                                 groups_info[group_no][pair_qty - 1].append(pair)
             if all_friendly:  # remove rest of info about match
-                output_matrix[rounds - round][game] = "free"
-                output_matrix[rounds - round][game + 1] = "free"
-                output_matrix[rounds - round][game + 2] = "free"
+                output_matrix[rounds - round_from_rounds][game] = "free"
+                output_matrix[rounds - round_from_rounds][game + 1] = "free"
+                output_matrix[rounds - round_from_rounds][game + 2] = "free"
                 for team in group:
                     if team.id == team1:
                         team.games_played -= 1
@@ -332,8 +337,8 @@ def home_games(output_matrix):
         if non_found:
             max_homesickness -= 1
         non_found = True
-        for round, set in enumerate(output_matrix):
-            for location, team in enumerate(set):
+        for local_round, local_set in enumerate(output_matrix):
+            for location, team in enumerate(local_set):
                 if team != "free":  # call in America
                     input_empty = False
                     if homesickness[team] > max_homesickness:
@@ -344,61 +349,69 @@ def home_games(output_matrix):
                                 elif max_homesickness < -10:  # try kicking out the other triangle.
                                     for j, ven2 in enumerate(VENUES):
                                         if (
-                                            new_output_matrix[round][(i * 3) + 1][0:2] == ven2[0:2]
-                                            and new_output_matrix[round][(j * 3)] == "free"
+                                            new_output_matrix[local_round][(i * 3) + 1][0:2] == ven2[0:2]
+                                            and new_output_matrix[local_round][(j * 3)] == "free"
                                         ):
-                                            new_output_matrix[round][(j * 3)] = new_output_matrix[round][(i * 3) + 1]
-                                            new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][(i * 3)]
-                                            new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][
-                                                (i * 3) + 2
-                                            ]
-                                            homesickness[new_output_matrix[round][i * 3 + 1]] -= 3
-                                            homesickness[new_output_matrix[round][i * 3]] += 3
-                                            new_output_matrix[round][(i * 3)] = "free"
-                                            new_output_matrix[round][(i * 3) + 1] = "free"
-                                            new_output_matrix[round][(i * 3) + 2] = "free"
-
-                                        if (
-                                            new_output_matrix[round][(i * 3) + 2][0:2] == ven2[0:2]
-                                            and new_output_matrix[round][(j * 3)] == "free"
-                                        ):
-                                            new_output_matrix[round][(j * 3)] = new_output_matrix[round][(i * 3) + 2]
-                                            new_output_matrix[round][(j * 3) + 1] = new_output_matrix[round][
+                                            new_output_matrix[local_round][(j * 3)] = new_output_matrix[local_round][
                                                 (i * 3) + 1
                                             ]
-                                            new_output_matrix[round][(j * 3) + 2] = new_output_matrix[round][(i * 3)]
-                                            homesickness[new_output_matrix[round][i * 3 + 2]] -= 3
-                                            homesickness[new_output_matrix[round][i * 3]] += 3
-                                            new_output_matrix[round][(i * 3)] = "free"
-                                            new_output_matrix[round][(i * 3) + 1] = "free"
-                                            new_output_matrix[round][(i * 3) + 2] = "free"
-                                if new_output_matrix[round][i * 3] == "free":  # match here
+                                            new_output_matrix[local_round][(j * 3) + 1] = new_output_matrix[
+                                                local_round
+                                            ][(i * 3)]
+                                            new_output_matrix[local_round][(j * 3) + 2] = new_output_matrix[
+                                                local_round
+                                            ][(i * 3) + 2]
+                                            homesickness[new_output_matrix[local_round][i * 3 + 1]] -= 3
+                                            homesickness[new_output_matrix[local_round][i * 3]] += 3
+                                            new_output_matrix[local_round][(i * 3)] = "free"
+                                            new_output_matrix[local_round][(i * 3) + 1] = "free"
+                                            new_output_matrix[local_round][(i * 3) + 2] = "free"
+
+                                        if (
+                                            new_output_matrix[local_round][(i * 3) + 2][0:2] == ven2[0:2]
+                                            and new_output_matrix[local_round][(j * 3)] == "free"
+                                        ):
+                                            new_output_matrix[local_round][(j * 3)] = new_output_matrix[local_round][
+                                                (i * 3) + 2
+                                            ]
+                                            new_output_matrix[local_round][(j * 3) + 1] = new_output_matrix[
+                                                local_round
+                                            ][(i * 3) + 1]
+                                            new_output_matrix[local_round][(j * 3) + 2] = new_output_matrix[
+                                                local_round
+                                            ][(i * 3)]
+                                            homesickness[new_output_matrix[local_round][i * 3 + 2]] -= 3
+                                            homesickness[new_output_matrix[local_round][i * 3]] += 3
+                                            new_output_matrix[local_round][(i * 3)] = "free"
+                                            new_output_matrix[local_round][(i * 3) + 1] = "free"
+                                            new_output_matrix[local_round][(i * 3) + 2] = "free"
+                                if new_output_matrix[local_round][i * 3] == "free":  # match here
                                     total_games += 1
                                     non_found = False
-                                    new_output_matrix[round][i * 3] = team
-                                    set[location] = "free"
+                                    new_output_matrix[local_round][i * 3] = team
+                                    local_set[location] = "free"
                                     if location % 3 == 0:
-                                        new_output_matrix[round][i * 3 + 1] = set[location + 1]
-                                        new_output_matrix[round][i * 3 + 2] = set[location + 2]
-                                        set[location + 1] = "free"
-                                        set[location + 2] = "free"
+                                        new_output_matrix[local_round][i * 3 + 1] = local_set[location + 1]
+                                        new_output_matrix[local_round][i * 3 + 2] = local_set[location + 2]
+                                        local_set[location + 1] = "free"
+                                        local_set[location + 2] = "free"
                                     if location % 3 == 1:
-                                        new_output_matrix[round][i * 3 + 1] = set[location - 1]
-                                        new_output_matrix[round][i * 3 + 2] = set[location + 1]
-                                        set[location - 1] = "free"
-                                        set[location + 1] = "free"
+                                        new_output_matrix[local_round][i * 3 + 1] = local_set[location - 1]
+                                        new_output_matrix[local_round][i * 3 + 2] = local_set[location + 1]
+                                        local_set[location - 1] = "free"
+                                        local_set[location + 1] = "free"
                                     if location % 3 == 2:
-                                        new_output_matrix[round][i * 3 + 1] = set[location - 1]
-                                        new_output_matrix[round][i * 3 + 2] = set[location - 2]
-                                        set[location - 1] = "free"
-                                        set[location - 2] = "free"
+                                        new_output_matrix[local_round][i * 3 + 1] = local_set[location - 1]
+                                        new_output_matrix[local_round][i * 3 + 2] = local_set[location - 2]
+                                        local_set[location - 1] = "free"
+                                        local_set[location - 2] = "free"
                                     # max_homesickness += 0.2  # prevents mass game locations being decided
                                     homesickness[team] -= 2  # update homesickness
-                                    homesickness[new_output_matrix[round][i * 3 + 1]] += 1
-                                    homesickness[new_output_matrix[round][i * 3 + 2]] += 1
-                                    if homesickness[new_output_matrix[round][i * 3 + 1]] > max_homesickness:
+                                    homesickness[new_output_matrix[local_round][i * 3 + 1]] += 1
+                                    homesickness[new_output_matrix[local_round][i * 3 + 2]] += 1
+                                    if homesickness[new_output_matrix[local_round][i * 3 + 1]] > max_homesickness:
                                         max_homesickness += 1
-                                    if homesickness[new_output_matrix[round][i * 3 + 2]] > max_homesickness:
+                                    if homesickness[new_output_matrix[local_round][i * 3 + 2]] > max_homesickness:
                                         max_homesickness += 1
                                     break
     matchup_penalty = 0
@@ -406,9 +419,9 @@ def home_games(output_matrix):
         for i in range(len(thing1)):
             if thing1[i] == "Full":
                 thing1[i] = "free"
-    for team in homesickness:
-        if homesickness[team] > 0:
-            matchup_penalty += homesickness[team] * (1 + homesickness[team] / 10)
+    for team_homesickness in homesickness.items():
+        if team_homesickness > 0:
+            matchup_penalty += team_homesickness * (1 + team_homesickness / 10)
     return new_output_matrix, away_games, total_games, matchup_penalty
 
 
@@ -614,10 +627,8 @@ def loop_replace_league(output_matrix, groups, groups_info, re_groups):
     best_groups_info = []
     best_total_games = 0
     best_away_games = 0
-    average_match_up_score = 0
     best_friendly_count = 0
     # league_number = 0
-    best_re_groups = []
     for _ in range(3):
         for league_number in range(len(groups)):
             good_score = 9999
@@ -652,7 +663,6 @@ def loop_replace_league(output_matrix, groups, groups_info, re_groups):
                     best_groups_info = copy.deepcopy(groups_info)
                     best_total_games = total_games * 3
                     best_away_games = away_games
-                    best_re_groups = copy_teams(re_groups, groups)
                     if OVERNIGHT_MODE:
                         print_table(output_matrix)
                         print_friendlies(friendlies)
@@ -712,10 +722,10 @@ def add_league(output_matrix, re_groups, league_number, groups_info):
 
 def remove_league(output_matrix, groups, league_number, info, re_groups):
     for team in groups[league_number]:
-        for round in output_matrix:
-            for i in range(len(round)):
-                if round[i] == team:
-                    round[i] = "free"
+        for local_round in output_matrix:
+            for i in range(len(local_round)):
+                if local_round[i] == team:
+                    local_round[i] = "free"
     reset_group = info[league_number]
     all_pairs = []
     for index in reset_group:
@@ -725,7 +735,7 @@ def remove_league(output_matrix, groups, league_number, info, re_groups):
         team.history = ""
         team.opponents_played = []
         team.games_played = 0
-        team.eligible_opponents = team._backup_opponents.copy()
+        team.eligible_opponents = team._backup_opponents.copy()  # pylint: disable=protected-access
     return output_matrix, info, re_groups
 
 
@@ -733,25 +743,25 @@ def find_friendlies(groups_info):
     """
     :return: list of matches that are friendly and not ranked along with the count
     """
-    """ old method
-    friendlies = []
-    friendly_count = 0
-    for group in groups:
-        friendlies_in_group = []
-        formal_rounds = 999999
-        for team in group:
-            for team2 in group:
-                if team != team2:
-                    formal_rounds = min(formal_rounds, team.opponents_played.count(team2.id))
-        for team in group:
-            for team2 in group:
-                if team != team2:
-                    for _ in range(team.opponents_played.count(team2.id) - formal_rounds):
-                        friendlies_in_group += [[team.id, team2.id]]
-                        friendly_count += 1
-        friendlies += [friendlies_in_group]
-    return friendlies, friendly_count / 2
-    """
+    # old method
+    # friendlies = []
+    # friendly_count = 0
+    # for group in groups:
+    #     friendlies_in_group = []
+    #     formal_rounds = 999999
+    #     for team in group:
+    #         for team2 in group:
+    #             if team != team2:
+    #                 formal_rounds = min(formal_rounds, team.opponents_played.count(team2.id))
+    #     for team in group:
+    #         for team2 in group:
+    #             if team != team2:
+    #                 for _ in range(team.opponents_played.count(team2.id) - formal_rounds):
+    #                     friendlies_in_group += [[team.id, team2.id]]
+    #                     friendly_count += 1
+    #     friendlies += [friendlies_in_group]
+    # return friendlies, friendly_count / 2
+
     friendlies = []
     friendly_count = 0
     for group_info in groups_info:
@@ -851,13 +861,15 @@ for not_i in range(ROUNDS + 2):  # +2 cuz i'm too lazy to bother with off by 1 e
     LESS_COURTS.append(count2)
 blank_output_matrix = []
 for _ in range(ROUNDS):  # fill blank_output_matrix with free slots
-    all_free = []
-    for _ in VENUES:
+    all_free: List[str] = []
+    for __ in VENUES:
         all_free.extend(("free", "free", "free"))
     blank_output_matrix.append(all_free)
-for pair2 in VENUES_DATES_NO_PLAY:
-    venue = VENUES.index(pair2[0]) + 1
-    round_number = pair2[1] - 1
+venue_index: str
+date: int
+for venue_index, date in VENUES_DATES_NO_PLAY:
+    venue = VENUES.index(venue_index) + 1
+    round_number = date - 1
     if round_number > ROUNDS - 1:
         continue
     blank_output_matrix[round_number][venue * 3] = "Full"

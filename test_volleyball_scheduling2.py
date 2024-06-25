@@ -1,3 +1,5 @@
+"""This tests the code in volleyball_scheduling2.py."""
+
 import volleyball_scheduling2
 
 
@@ -55,7 +57,7 @@ FBJ1	10
 """
     teams = volleyball_scheduling2.parse_team_unavailability(teams, team_unavailability_str)
     assert teams == {
-        "BSM1": {"name": "Basingstoke Lionesses", "league": "L1", "unavailability": {2,3,6,10}},
+        "BSM1": {"name": "Basingstoke Lionesses", "league": "L1", "unavailability": {2, 3, 6, 10}},
         "FBJ1": {"name": "Basingstoke Hornets", "league": "J1", "unavailability": {10}},
         "BSJ2": {"name": "Basingstoke Lynx", "league": "J1", "unavailability": set()},
     }
@@ -65,14 +67,16 @@ def test_parse_venues():
     venues_str = """
     BS1	Basingstoke
     FB1	Farnborough
-    MH1	Maidenhead
-    MV1	Mavericks
-    NB1	Newbury
     OU1	Oxford Uni
     OX1	Oxford
-    RA1	Reading Aces
-    SB1	South Bucks
     SP1	Spikeopaths
     SP2	Spikeopaths
     """
-    venues = volleyball_scheduling2.parse_venues(teams, venues_str)
+    venues = volleyball_scheduling2.parse_venues(venues_str)
+    assert venues == {
+        "Basingstoke": {"BS1"},
+        "Farnborough": {"FB1"},
+        "Oxford Uni": {"OU1"},
+        "Oxford": {"OX1"},
+        "Spikeopaths": {"SP1", "SP2"},
+    }
