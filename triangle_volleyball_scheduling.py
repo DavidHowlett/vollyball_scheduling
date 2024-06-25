@@ -391,9 +391,9 @@ def home_games(output_matrix):
         for i in range(len(thing1)):
             if thing1[i] == "Full":
                 thing1[i] = "free"
-    for team_homesickness in homesickness.items():
-        if team_homesickness > 0:
-            matchup_penalty += team_homesickness * (1 + team_homesickness / 10)
+    for sickness in homesickness.values():
+        if sickness > 0:
+            matchup_penalty += sickness * (1 + sickness / 10)
     return new_output_matrix, away_games, total_games, matchup_penalty
 
 
