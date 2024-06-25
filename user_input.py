@@ -5,6 +5,44 @@ I have formatted all the variables as tab separated values to make it easy to pa
 Excel.
 """
 
+week_to_date = """
+1	Sun 09-Oct-22
+2	Sun 16-Oct-22
+3	Sun 23-Oct-22
+4	Sun 30-Oct-22
+5	Sun 06-Nov-22
+6	Sun 13-Nov-22
+7	Sun 20-Nov-22
+8	Sun 27-Nov-22
+9	Sun 04-Dec-22
+10	Sun 11-Dec-22
+11	Sun 18-Dec-22
+12	Sun 25-Dec-22
+13	Sun 01-Jan-23
+14	Sun 08-Jan-23
+15	Sun 15-Jan-23
+16	Sun 22-Jan-23
+17	Sun 29-Jan-23
+18	Sun 05-Feb-23
+19	Sun 12-Feb-23
+20	Sun 19-Feb-23
+21	Sun 26-Feb-23
+22	Sun 05-Mar-23
+23	Sun 12-Mar-23
+24	Sun 19-Mar-23
+25	Sun 26-Mar-23
+26	Sun 02-Apr-23
+27	Sun 09-Apr-23
+28	Sun 16-Apr-23
+29	Sun 23-Apr-23
+30	Sun 30-Apr-23
+"""
+
+weeks_no_one_can_play = """
+12
+13
+27
+"""
 
 # This is a dictionary of the leagues.
 # It maps the leagues to the other leagues that can't be scheduled at the same time.
@@ -37,8 +75,8 @@ MHM1	Maidenhead Braywick	M1	Maidenhead
 MHM2	Maidenhead Magnet	M2	Maidenhead
 MHX1	Maidenhead Braywick	X1	Maidenhead
 MHX2	Maidenhead Magnet	X1	Maidenhead
-MVJ1	Maverick Juniors	J1	Maverick
-MVX	Maverick Mixed	X2	Maverick
+MVJ1	Maverick Juniors	J1	Mavericks
+MVX	Maverick Mixed	X2	Mavericks
 NBJ1	Newbury Juniors	J1	Newbury
 NBL1	Newbury Ladies	L1	Newbury
 NBM1	Newbury Mens	M2	Newbury
@@ -144,7 +182,7 @@ SP1	Spikeopaths
 SP2	Spikeopaths
 """
 
-venue_unavailability = """
+venues_unavailability = """
 BS1	10
 FB1	11
 MV1	15
@@ -162,44 +200,6 @@ MV1	29
 MV1	30
 """
 
-weeks_no_one_can_play = """
-12
-13
-27
-"""
-
-week_to_date = """
-1	Sun 09-Oct-22
-2	Sun 16-Oct-22
-3	Sun 23-Oct-22
-4	Sun 30-Oct-22
-5	Sun 06-Nov-22
-6	Sun 13-Nov-22
-7	Sun 20-Nov-22
-8	Sun 27-Nov-22
-9	Sun 04-Dec-22
-10	Sun 11-Dec-22
-11	Sun 18-Dec-22
-12	Sun 25-Dec-22
-13	Sun 01-Jan-23
-14	Sun 08-Jan-23
-15	Sun 15-Jan-23
-16	Sun 22-Jan-23
-17	Sun 29-Jan-23
-18	Sun 05-Feb-23
-19	Sun 12-Feb-23
-20	Sun 19-Feb-23
-21	Sun 26-Feb-23
-22	Sun 05-Mar-23
-23	Sun 12-Mar-23
-24	Sun 19-Mar-23
-25	Sun 26-Mar-23
-26	Sun 02-Apr-23
-27	Sun 09-Apr-23
-28	Sun 16-Apr-23
-29	Sun 23-Apr-23
-30	Sun 30-Apr-23
-"""
 
 # Using pre-made triangles simplifies some of the work of deciding who to schedule when
 pre_made_triangles = {
