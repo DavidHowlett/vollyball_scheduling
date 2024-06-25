@@ -76,7 +76,7 @@ MHM2	Maidenhead Magnet	M2	Maidenhead
 MHX1	Maidenhead Braywick	X1	Maidenhead
 MHX2	Maidenhead Magnet	X1	Maidenhead
 MVJ1	Maverick Juniors	J1	Mavericks
-MVX	Maverick Mixed	X2	Mavericks
+MVX1	Maverick Mixed	X2	Mavericks
 NBJ1	Newbury Juniors	J1	Newbury
 NBL1	Newbury Ladies	L1	Newbury
 NBM1	Newbury Mens	M2	Newbury

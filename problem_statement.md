@@ -8,7 +8,7 @@ Situation
 - Andrew Tatarek schedules all competitive volleyball matches for a season at the start of the season.
 - Volleyball matches happen at weekends.
 - Each weekend in a year is numbered sequentially starting from 1.
-    - This may not line up with the beginning of the year but this doesn't matter for solving the problem.
+    - This may not line up with the beginning of the year, but this doesn't matter for solving the problem.
 
 - There are one or more leagues
 - There are one or more clubs
@@ -18,10 +18,10 @@ Situation
 - Each team is a member of 1 league
 - Each league has 3 or more teams.
 - A match consists of an unordered set of 2 teams and a team that works as the referee
-- To save on traveling it is common practice to schedule three matches between three teams on one weekend at one location. This is referred to as a triangle.
+- To save on traveling, it is common practice to schedule three matches between three teams on one weekend at one location. This is referred to as a triangle.
 - For each match in a triangle, the team that is not playing is the ref
 - Each triangle must be scheduled on one weekend at one location
-- Each triangle must be scheduled at one of the home locations of one of it's members
+- Each triangle must be scheduled at one of the home locations of one of its members
 - A triangle consists of an unordered set of 3 teams from the same league.
 - A season has many triangles (about 70)
 - A season can contain duplicate triangles with the same teams in.
@@ -55,12 +55,12 @@ Program inputs
 Program output
 --------------
 
-- Main output will be a team focused table:
+- The main output will be a team focused table:
   - Teams on the left
   - Dates at the top
   - Total number of games per team on the right
   - The bulk of the table will be a venue if there is a game and "." if there is no game
-- Second output will be a match focused table. Each triangle will be three grouped rows.
+- The second output will be a match focused table. Each triangle will be three grouped rows.
   - The second two rows should be the matches played by the home team
   - The columns in order are:
     - League
@@ -68,7 +68,7 @@ Program output
     - Venue
     - Team 1
     - Team 2
-- Third output is a list of the triangles that were not scheduled
+- The third output should be a list of the triangles that were not scheduled
 
 
 Solution Scoring
@@ -118,11 +118,11 @@ Outstanding questions
 ---------------------
 
 - When does the next season start? I wonder when the deadline is for the program working well.
-  - Volleyball season is October - April
+  - Volleyball season is October – April
   - Answer: Teams are picked in August
-- Can we score each team on it's average score against each other team?
-  - This would mean that are no more friendlies.
-  - We could efficiently pack in more games per season without imbalances caused by who got scheduled with who.
+- Can we score each team on its average score against each other team?
+  - This would mean that there are no more friendlies.
+  - We could efficiently pack in more games per season without imbalances caused by whom got scheduled with whom.
   - Answer: It is preferable to have a preset number of games as the input (e.g. each team plays 2 games)
 - Are the team codes (like OXM2) customer facing? I don't want to change things that would annoy teams.
 - How many triangles can be scheduled at one venue in one weekend?
