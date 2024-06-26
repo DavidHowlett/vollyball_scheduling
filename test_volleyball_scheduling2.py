@@ -152,3 +152,13 @@ def test_get_venue_availability():
         "MV1": {"availability": {1, 2, 6, 7, 8, 10}},
         "fake": {"availability": {1, 2, 3, 6, 7, 8, 9, 10}},
     }
+
+
+def test_solve():
+    """For very small cases, there is a single unambiguously correct solution."""
+    pass  # todo
+
+
+def test_score_solution():
+    """We can at least say when one solution is better than another."""
+    pass  # todo

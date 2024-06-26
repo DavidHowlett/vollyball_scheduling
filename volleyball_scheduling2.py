@@ -159,13 +159,60 @@ def solve(teams: Dict[Team, Dict], venues: Dict[Venue, Dict], leagues: Dict[Leag
     return solution
 
 
+# def all_legal_next_spots():
+#    for trangle in triangles_remaining
+
+
+def score_solution(solution: Solution, teams, season_length: int) -> int:
+    """Calculates a score for the solution. More is better.
+
+    If you feel that the solver is consistently valuing things wrong, you need to adjust
+    this function.
+    """
+    # It is good to schedule more games
+    score = 50 * len(solution)
+
+    # It is good to schedule games earlier in the season
+    score += sum(season_length - week for _, week in solution)
+
+    # It is good for teams to play a similar number of games
+    add_games_to_teams(solution, teams)
+    games_played_by_teams = [len(team["spots played"]) for team in teams.values()]
+    minimum_games_played_by_team = min(games_played_by_teams)
+    maximum_games_played_by_team = max(games_played_by_teams)
+    score -= 100 * (maximum_games_played_by_team - minimum_games_played_by_team)
+
+    # It is good for clubs to play a similar number of games weighted by number of teams
+    # some of this logic could be moved to the setup stage to speed things up
+    clubs = {}
+    for team in teams.values():
+        club_code = team["club"]
+        if club_code not in clubs:
+            clubs[club_code] = {"team count": 0, "spots played": 0}
+        clubs[club_code]["team count"] += 1
+        clubs[club_code]["spots played"] += len(team["spots played"])
+    games_played_by_clubs = [len(team["spots played"]) for team in teams.values()]
+    minimum_games_played_by_club = min(games_played_by_clubs)
+    maximum_games_played_by_team = max(games_played_by_clubs)
+    score -= 200 * (maximum_games_played_by_team - minimum_games_played_by_club)
+
+    # todo minor incentive for keeping the number of placement options high.
+    #  This might keep options open during tree search.
+    # todo strongly penalise triangles that can't be scheduled anywhere.
+    #  This is an early signal of trouble in the tree search.
+
+    return score
+
+
 def display_solution(solution: Solution, teams, venues, season_length: int) -> None:
     """The user has requested that the solution be displayed in a tabular format."""
-    print(f"solution found: {solution}")
     teams_table = make_teams_table(solution, teams, season_length)
     print(teams_table)
     venues_table = make_venues_table(solution, venues, season_length)
     print(venues_table)
+    print(f"solution found: {solution}")
+    score = score_solution(solution, teams, season_length)
+    print(f"solution score: {score}")
 
 
 def make_teams_table(solution: Solution, teams, season_length: int) -> str:
@@ -195,6 +242,8 @@ def add_games_to_teams(solution: Solution, teams):
     for (venue, week), triangle in solution.items():
         for team_code in triangle:
             teams[team_code]["spots played"][week] = venue
+    # Every value in the solution should appear 3 times in the teams
+    assert sum(len(team["spots played"]) for team in teams.values()) == 3 * len(solution)
     return teams
 
 
