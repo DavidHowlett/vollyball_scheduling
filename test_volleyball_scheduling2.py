@@ -43,12 +43,12 @@ def test_parse_leagues():
     """
     leagues = volleyball_scheduling2.parse_leagues(leagues_str)
     assert leagues == {
-        "mens1": {"mixed"},
-        "mens2": {"mixed"},
-        "womens1": {"mixed"},
-        "womens2": {"mixed"},
-        "mixed": {"mens1", "mens2", "womens1", "womans2"},
-        "juniors": set(),
+        "mens1": {"bad matchups": {"mixed"}},
+        "mens2": {"bad matchups": {"mixed"}},
+        "womens1": {"bad matchups": {"mixed"}},
+        "womens2": {"bad matchups": {"mixed"}},
+        "mixed": {"bad matchups": {"mens1", "mens2", "womens1", "womans2"}},
+        "juniors": {"bad matchups": set()},
     }
 
 

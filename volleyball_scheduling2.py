@@ -2,26 +2,29 @@
 """This is an attempt at the volleyball scheduling problem by David Howlett after
 previous attempts by Robert Howlett and Micheal Howlett."""
 import collections
-from typing import Dict, FrozenSet, List, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Set, Tuple
 
 import user_input
 
 # type aliases that make sense for this program
-Team = str
-Venue = str
-League = str
+TeamCode = str
+VenueCode = str
+LeagueCode = str
+Teams = Dict[TeamCode, Dict[str, Any]]  # it would be better to not use Any here
+Venues = Dict[VenueCode, Dict[str, Any]]
+Leagues = Dict[LeagueCode, Dict[str, Any]]
 Week = int
-Spot = Tuple[Venue, Week]
-Triangle = FrozenSet[Team]
+Spot = Tuple[VenueCode, Week]
+Triangle = FrozenSet[TeamCode]
 Solution = Dict[Spot, Triangle]
 
 
 def main():
-    teams, venues, league_exclusions, season_length = setup()
+    teams, venues, leagues, season_length = setup()
     print(f"teams: {teams})")
     print(f"venues: {venues}")
-    print(f"leagues that can't play at the same time: {league_exclusions}")
-    solution = solve(teams, venues, league_exclusions)
+    print(f"leagues: {leagues}")
+    solution = solve(teams, venues, leagues)
     display_solution(solution, teams, venues, season_length)
 
 
@@ -34,7 +37,7 @@ def setup():
     weeks_no_one_can_play = parse_weeks_no_one_can_play(user_input.weeks_no_one_can_play)
     season_length = len(week_to_date)
 
-    league_exclusions = parse_leagues(user_input.league_exclusions)
+    leagues = parse_leagues(user_input.league_exclusions)
     teams, clubs = parse_teams(user_input.teams)
     team_unavailability = parse_team_unavailability(user_input.team_unavailability)
     teams = get_team_availability(teams, team_unavailability, season_length, weeks_no_one_can_play)
@@ -44,7 +47,7 @@ def setup():
     for venue in venues.values():
         if venue["club"] not in clubs:
             raise ValueError(f"{venue['club']} not in clubs")
-    return teams, venues, league_exclusions, season_length
+    return teams, venues, leagues, season_length
 
 
 def parse_week_to_date(week_to_date_str: str):
@@ -60,19 +63,19 @@ def parse_weeks_no_one_can_play(dates: str) -> Set[int]:
     return {int(week.strip()) for week in dates.split()}
 
 
-def parse_leagues(leagues_str: str) -> Dict[League, Set[League]]:
+def parse_leagues(leagues_str: str) -> Leagues:
     leagues_str = leagues_str.strip()
     leagues = {}
     for line in leagues_str.split("\n"):
         league, _, bad_matchups = line.partition("\t")
-        leagues[league.strip()] = set(bad_matchups.split(" ")) if bad_matchups else set()
+        leagues[league.strip()] = {"bad matchups": set(bad_matchups.split(" ")) if bad_matchups else set()}
     return leagues
 
 
 def parse_teams(teams_str: str):
     teams_str = teams_str.strip()
     teams = {}
-    clubs: Dict[str, Dict] = {}
+    clubs: Dict[str, Dict[str, Any]] = {}
     for line in teams_str.split("\n"):
         code, name, league, club = line.split("\t")
         teams[code.strip()] = {"name": name, "league": league, "club": club}
@@ -90,8 +93,8 @@ def parse_team_unavailability(unavailability_str: str):
 
 
 def get_team_availability(
-    teams, team_unavailability, total_weeks: int, weeks_no_one_can_play: Set[int]
-) -> Dict[Team, Dict]:
+    teams: Teams, team_unavailability, total_weeks: int, weeks_no_one_can_play: Set[Week]
+) -> Teams:
     """The program inputs are specified in terms of the weeks that can't be played, but
     it is easier to work with sets of weeks that can be played."""
     all_weeks = set(range(1, total_weeks + 1))
@@ -123,8 +126,8 @@ def parse_venues_unavailability(venue_unavailability_str: str):
 
 
 def get_venue_availability(
-    venues, venue_unavailability, total_weeks: int, weeks_no_one_can_play: Set[int]
-) -> Dict[Venue, Dict]:
+    venues: Venues, venue_unavailability, total_weeks: int, weeks_no_one_can_play: Set[Week]
+) -> Venues:
     """The program inputs are specified in terms of the weeks that can't be played, but
     it is easier to work with sets of weeks that can be played."""
     all_weeks = set(range(1, total_weeks + 1))
@@ -137,7 +140,7 @@ def get_venue_availability(
     return venues
 
 
-def solve(teams: Dict[Team, Dict], venues: Dict[Venue, Dict], leagues: Dict[League, Set[League]]) -> Solution:
+def solve(teams: Teams, venues: Venues, leagues: Leagues) -> Solution:
     """This function converts the user inputs and does the scheduling.
 
     This function is the core of the program.
@@ -155,12 +158,11 @@ def solve(teams: Dict[Team, Dict], venues: Dict[Venue, Dict], leagues: Dict[Leag
     #        solution = best_solution
 
     # This is not a real solution, but it has the right type signature
-    solution = {(next(iter(venues)), 1): frozenset(list(teams)[:3])}
-    return solution
+    return {(next(iter(venues)), 1): frozenset(list(teams)[:3])}
 
 
 # def all_legal_next_spots():
-#    for trangle in triangles_remaining
+#    for triangle in triangles_remaining
 
 
 def score_solution(solution: Solution, teams, season_length: int) -> int:
@@ -254,7 +256,7 @@ def make_venues_table(solution: Solution, venues, season_length: int) -> str:
     add_games_to_venues(solution, venues)
     for venue_code, venue in venues.items():
         body += venue_code + " \t"
-        follow_up_lines: List[List[Team]] = [[], []]
+        follow_up_lines: List[List[TeamCode]] = [[], []]
         for week in range(1, season_length + 1):
             if week in venue["spots played"]:
                 assert week in venue["availability"]
