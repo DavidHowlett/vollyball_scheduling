@@ -47,11 +47,11 @@ weeks_no_one_can_play = """
 # This is a dictionary of the leagues.
 # It maps the leagues to the other leagues that can't be scheduled at the same time.
 league_exclusions = """
-mens1	mixed
-mens2	mixed
-womens1	mixed
-womens2	mixed
-mixed	mens1 mens2 womens1 womans2
+mens1	mixed1 mixed2
+mens2	mixed1 mixed2
+womens1	mixed1 mixed2
+mixed1	mens1 mens2 womens1
+mixed2	mens1 mens2 womens1
 juniors
 """
 
@@ -59,55 +59,55 @@ juniors
 # second column is the team name
 # third column is the league
 teams = """
-BSJ1	Basingstoke Lynx	J1	Basingstoke
-BSJ2	Basingstoke Hornets	J1	Basingstoke
-BSL1	Basingstoke Lionesses	L1	Basingstoke
-BSM1	Basingstoke Lions	M1	Basingstoke
-BSM2	Basingstoke Jaguars	M2	Basingstoke
-BSX1	Basingstoke Tigers	X1	Basingstoke
-FBJ1	Farnborough Wolves	J1	Farnborough
-FBL1	Farnborough Pheonix	L1	Farnborough
-FBM1	Farnborough Vipers	M1	Farnborough
-FBM2	Farnborough Hawks	M2	Farnborough
-FBX1	Farnborough Panthers	X1	Farnborough
-MHL1	Maidenhead Braywick	L1	Maidenhead
-MHM1	Maidenhead Braywick	M1	Maidenhead
-MHM2	Maidenhead Magnet	M2	Maidenhead
-MHX1	Maidenhead Braywick	X1	Maidenhead
-MHX2	Maidenhead Magnet	X1	Maidenhead
-MVJ1	Maverick Juniors	J1	Mavericks
-MVX1	Maverick Mixed	X2	Mavericks
-NBJ1	Newbury Juniors	J1	Newbury
-NBL1	Newbury Ladies	L1	Newbury
-NBM1	Newbury Mens	M2	Newbury
-NBM2	Newbury Juniors	M2	Newbury
-NBX1	Newbury Mixed	X2	Newbury
-OUL1	Oxford Uni Ladies	L1	Oxford Uni
-OUM1	Oxford Uni Men	M2	Oxford Uni
-OXL1	Oxford Falcons	L1	Oxford
-OXL2	Oxford Flamingoes	L1	Oxford
-OXM1	Oxford Vollox	M1	Oxford
-OXM2	Oxford Bulls	M1	Oxford
-OXM3	Oxford Bullox	M1	Oxford
-OXX1	Oxford Globetrotters	X1	Oxford
-RAJ1	Reading Aces Juniors A	J1	Reading Aces
-RAJ2	Reading Aces Juniors B	J1	Reading Aces
-RAL1	Reading Aces Ladies	L1	Reading Aces
-RAM1	Reading Aces Mens 1	M1	Reading Aces
-RAM2	Reading Aces Mens 2	M2	Reading Aces
-RAM3	Reading Aces Mens 3	M2	Reading Aces
-RAX1	Reading Aces Mixed 1	X1	Reading Aces
-RAX2	Reading Aces Mixed 2	X2	Reading Aces
-SBJ1	South Bucks Juniors	J1	South Bucks
-SBL1	South Bucks Ladies	L1	South Bucks
-SPL1	Spikeopaths Ladies	L1	Spikeopaths
-SPM1	Spikeopaths Mens 1	M1	Spikeopaths
-SPM2	Spikeopaths Mens 2	M1	Spikeopaths
-SPX1	Spikeopaths Mixed 1	X1	Spikeopaths
-SPX2	Spikeopaths Mixed 2	X2	Spikeopaths
-SPX3	Spikeopaths Mixed 3	X2	Spikeopaths
-WEM1	Wycombe Eagles	M2	Wycombe
-WEX1	Wycombe Eagles	X2	Wycombe
+BSJ1	Basingstoke Lynx	juniors	Basingstoke
+BSJ2	Basingstoke Hornets	juniors	Basingstoke
+BSL1	Basingstoke Lionesses	womens1	Basingstoke
+BSM1	Basingstoke Lions	mens1	Basingstoke
+BSM2	Basingstoke Jaguars	mens2	Basingstoke
+BSX1	Basingstoke Tigers	mixed1	Basingstoke
+FBJ1	Farnborough Wolves	juniors	Farnborough
+FBL1	Farnborough Pheonix	womens1	Farnborough
+FBM1	Farnborough Vipers	mens1	Farnborough
+FBM2	Farnborough Hawks	mens2	Farnborough
+FBX1	Farnborough Panthers	mixed1	Farnborough
+MHL1	Maidenhead Braywick	womens1	Maidenhead
+MHM1	Maidenhead Braywick	mens1	Maidenhead
+MHM2	Maidenhead Magnet	mens2	Maidenhead
+MHX1	Maidenhead Braywick	mixed1	Maidenhead
+MHX2	Maidenhead Magnet	mixed1	Maidenhead
+MVJ1	Maverick Juniors	juniors	Mavericks
+MVX1	Maverick Mixed	mixed2	Mavericks
+NBJ1	Newbury Juniors	juniors	Newbury
+NBL1	Newbury Ladies	womens1	Newbury
+NBM1	Newbury Mens	mens2	Newbury
+NBM2	Newbury Juniors	mens2	Newbury
+NBX1	Newbury Mixed	mixed2	Newbury
+OUL1	Oxford Uni Ladies	womens1	Oxford Uni
+OUM1	Oxford Uni Men	mens2	Oxford Uni
+OXL1	Oxford Falcons	womens1	Oxford
+OXL2	Oxford Flamingoes	womens1	Oxford
+OXM1	Oxford Vollox	mens1	Oxford
+OXM2	Oxford Bulls	mens1	Oxford
+OXM3	Oxford Bullox	mens1	Oxford
+OXX1	Oxford Globetrotters	mixed1	Oxford
+RAJ1	Reading Aces Juniors A	juniors	Reading Aces
+RAJ2	Reading Aces Juniors B	juniors	Reading Aces
+RAL1	Reading Aces Ladies	womens1	Reading Aces
+RAM1	Reading Aces Mens 1	mens1	Reading Aces
+RAM2	Reading Aces Mens 2	mens2	Reading Aces
+RAM3	Reading Aces Mens 3	mens2	Reading Aces
+RAX1	Reading Aces Mixed 1	mixed1	Reading Aces
+RAX2	Reading Aces Mixed 2	mixed2	Reading Aces
+SBJ1	South Bucks Juniors	juniors	South Bucks
+SBL1	South Bucks Ladies	womens1	South Bucks
+SPL1	Spikeopaths Ladies	womens1	Spikeopaths
+SPM1	Spikeopaths Mens 1	mens1	Spikeopaths
+SPM2	Spikeopaths Mens 2	mens1	Spikeopaths
+SPX1	Spikeopaths Mixed 1	mixed1	Spikeopaths
+SPX2	Spikeopaths Mixed 2	mixed2	Spikeopaths
+SPX3	Spikeopaths Mixed 3	mixed2	Spikeopaths
+WEM1	Wycombe Eagles	mens2	Wycombe
+WEX1	Wycombe Eagles	mixed2	Wycombe
 """
 
 team_unavailability = """

@@ -20,11 +20,12 @@ Solution = Dict[Spot, Triangle]
 
 
 def main():
-    teams, venues, leagues, season_length = setup()
+    teams, venues, leagues, triangles, season_length = setup()
     print(f"teams: {teams})")
     print(f"venues: {venues}")
     print(f"leagues: {leagues}")
-    solution = solve(teams, venues, leagues)
+    print(f"triangles: {triangles}")
+    solution = solve(teams, venues, leagues, triangles)
     display_solution(solution, teams, venues, season_length)
 
 
@@ -39,15 +40,20 @@ def setup():
 
     leagues = parse_leagues(user_input.league_exclusions)
     teams, clubs = parse_teams(user_input.teams)
+    for team in teams.values():
+        assert team["league"] in leagues  # catches some typos
+        assert team["club"] in clubs  # catches some typos
     team_unavailability = parse_team_unavailability(user_input.team_unavailability)
     teams = get_team_availability(teams, team_unavailability, season_length, weeks_no_one_can_play)
+    leagues = add_teams_to_leagues(teams, leagues)
     venues = parse_venues(user_input.venues)
     venue_unavailability = parse_venues_unavailability(user_input.venues_unavailability)
     venues = get_venue_availability(venues, venue_unavailability, season_length, weeks_no_one_can_play)
     for venue in venues.values():
         if venue["club"] not in clubs:
             raise ValueError(f"{venue['club']} not in clubs")
-    return teams, venues, leagues, season_length
+    triangles = get_triangles(leagues)
+    return teams, venues, leagues, triangles, season_length
 
 
 def parse_week_to_date(week_to_date_str: str):
@@ -107,6 +113,15 @@ def get_team_availability(
     return teams
 
 
+def add_teams_to_leagues(teams: Teams, leagues: Leagues):
+    for team_code, team in teams.items():
+        league = team["league"]
+        if "teams" not in leagues[league]:
+            leagues[league]["teams"] = []
+        leagues[league]["teams"].append(team_code)
+    return leagues
+
+
 def parse_venues(venues_str: str):
     venues_str = venues_str.strip()
     venues = {}
@@ -140,12 +155,28 @@ def get_venue_availability(
     return venues
 
 
-def solve(teams: Teams, venues: Venues, leagues: Leagues) -> Solution:
+def get_triangles(leagues: Leagues):
+    triangles = []
+    for league in leagues.values():
+        team_count = len(league["teams"])
+        triangles_with_numbers = user_input.pre_made_triangles[team_count]
+        # replace the digits in the triangles with actual teams
+        for triangle_with_numbers in triangles_with_numbers:
+            triangle = frozenset(league["teams"][team_number - 1] for team_number in triangle_with_numbers)
+            triangles.append(triangle)
+    return triangles
+
+
+def solve(teams: Teams, venues: Venues, leagues: Leagues, triangles) -> Solution:
     """This function converts the user inputs and does the scheduling.
 
     This function is the core of the program.
     """
+    #    solution: Solution = {}
+    #    for spot, triangle in all_legal_next_spots(solution, venues, triangles):
+    #        print(spot,triangle)  # todo
     assert leagues  # to make pylint happy
+    assert triangles  # to make pylint happy
     # def greedy_solve(solution):
     #    best_solution = None
     #    best_score = 999_999_999
@@ -161,8 +192,8 @@ def solve(teams: Teams, venues: Venues, leagues: Leagues) -> Solution:
     return {(next(iter(venues)), 1): frozenset(list(teams)[:3])}
 
 
-# def all_legal_next_spots():
-#    for triangle in triangles_remaining
+# def all_legal_next_spots(solution, venues, triangles):
+#    pass
 
 
 def score_solution(solution: Solution, teams, season_length: int) -> int:
@@ -213,6 +244,8 @@ def display_solution(solution: Solution, teams, venues, season_length: int) -> N
     venues_table = make_venues_table(solution, venues, season_length)
     print(venues_table)
     print(f"solution found: {solution}")
+    unused_triangles = "todo"
+    print(f"unused triangles: {unused_triangles}")
     score = score_solution(solution, teams, season_length)
     print(f"solution score: {score}")
 
