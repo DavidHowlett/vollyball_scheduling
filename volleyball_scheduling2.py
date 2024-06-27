@@ -192,8 +192,14 @@ def solve(teams: Teams, venues: Venues, leagues: Leagues, triangles) -> Solution
     return {(next(iter(venues)), 1): frozenset(list(teams)[:3])}
 
 
-# def all_legal_next_spots(solution, venues, triangles):
-#    pass
+def generate_legal_moves(solution, venues, triangles):
+    """This aims to generate all legal moves that could plausibly be the best move.
+
+    We only generate moves for the earliest weeks that are not filled up for performance
+    reasons. We avoid scheduling teams twice in a week. We avoid scheduling a venue
+    twice in a weekend. We only schedule teams and venues when they are free.
+    """
+    print(solution, venues, triangles)  # todo
 
 
 def score_solution(solution: Solution, teams, season_length: int) -> int:
@@ -224,10 +230,10 @@ def score_solution(solution: Solution, teams, season_length: int) -> int:
             clubs[club_code] = {"team count": 0, "spots played": 0}
         clubs[club_code]["team count"] += 1
         clubs[club_code]["spots played"] += len(team["spots played"])
-    games_played_by_clubs = [len(team["spots played"]) for team in teams.values()]
+    games_played_by_clubs = [club["spots played"] / club["team count"] for club in clubs.values()]
     minimum_games_played_by_club = min(games_played_by_clubs)
-    maximum_games_played_by_team = max(games_played_by_clubs)
-    score -= 200 * (maximum_games_played_by_team - minimum_games_played_by_club)
+    maximum_games_played_by_club = max(games_played_by_clubs)
+    score -= int(200 * (maximum_games_played_by_club - minimum_games_played_by_club))
 
     # todo minor incentive for keeping the number of placement options high.
     #  This might keep options open during tree search.

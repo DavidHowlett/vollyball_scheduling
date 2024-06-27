@@ -102,8 +102,8 @@ def test_get_team_availability():
         "BSM1": {2, 3, 6, 10},
         "FBJ1": {10},
     }
-    team_availabilty = volleyball_scheduling2.get_team_availability(teams, team_unavailability, 10, {4, 5})
-    assert team_availabilty == {
+    team_availability = volleyball_scheduling2.get_team_availability(teams, team_unavailability, 10, {4, 5})
+    assert team_availability == {
         "BSM1": {"availability": {1, 7, 8, 9}},
         "FBJ1": {"availability": {1, 2, 3, 6, 7, 8, 9}},
         "fake": {"availability": {1, 2, 3, 6, 7, 8, 9, 10}},
